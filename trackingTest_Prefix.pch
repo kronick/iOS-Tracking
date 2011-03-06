@@ -1,0 +1,9 @@
+//
+// Prefix header for all source files of the 'trackingTest' target in the 'trackingTest' project
+//
+
+#ifdef __OBJC__
+	#import <opencv2/opencv.hpp>
+    #import <Foundation/Foundation.h>
+    #import <UIKit/UIKit.h>
+#endif
