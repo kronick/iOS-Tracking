@@ -96,7 +96,7 @@
 	CGContextFillPath(context);
 
 	// Draw found object
-	CGContextSetStrokeColorWithColor(context, [UIColor redColor].CGColor);
+	CGContextSetStrokeColorWithColor(context, [UIColor whiteColor].CGColor);
     CGContextSetLineWidth(context, 3.0);
 	for(int i=0; i<4; i++) {
 		a = [self getScreenCoord:foundCorners[i]];

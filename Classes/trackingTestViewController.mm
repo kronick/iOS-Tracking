@@ -46,7 +46,7 @@ using namespace cv;
 	FASTThreshold = 30;
 	frameCount = 0;
 	setNewMilestone = NO;
-	keyPointTarget = 100;
+	keyPointTarget = 200;
 	
 	self.objectFinder = [[[Homography alloc] init] autorelease];
 	
@@ -140,10 +140,11 @@ using namespace cv;
 	//NSLog(@"Keypoints found: %i, Threshold: %f", mDetectedKeyPoints.size(), FASTThreshold);
 	// Dynamically adjust threshold to have about 150 points
 	if(fabs(mDetectedKeyPoints.size() - keyPointTarget) > keyPointTarget  * .1) {
-		FASTThreshold += (float)(mDetectedKeyPoints.size() - (float)keyPointTarget) * .1;
-		if(FASTThreshold > 500) FASTThreshold = 500;
+		FASTThreshold += (float)(mDetectedKeyPoints.size() - (float)keyPointTarget) * .05;
+		if(FASTThreshold > 200) FASTThreshold = 200;
 		if(FASTThreshold < 1)   FASTThreshold = 1;
 	}
+	//NSLog(@"Threshold: %f", FASTThreshold);
 	mCapturedImage = cv::Mat(image);
 	
 	if(NO && pointTracker->tracking) {

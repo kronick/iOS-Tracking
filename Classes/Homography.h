@@ -8,6 +8,7 @@
 
 
 @interface Homography : NSObject {
+	BOOL useFerns;
 	cv::Mat sourceImage;
 	cv::Mat *destImage;
 	std::vector<cv::KeyPoint> sourceKeyPoints;
@@ -20,6 +21,7 @@
 	
 	BOOL sourceDescriptorsAreFresh;	// Reset after image is changed
 	BOOL destDescriptorsAreFresh;
+	cv::PlanarObjectDetector detector;	// Wraps Ferns-based matcher
 }
 
 - (id)initWithSourceImage:(cv::Mat*)sourceMat sourceKeyPoints:(std::vector<cv::KeyPoint>*)sourcePoints destImage:(cv::Mat*)destMat destKeyPoints:(std::vector<cv::KeyPoint>*)destPoints;
