@@ -24,6 +24,9 @@
 		
 		for(int i=0; i<4; i++)
 			foundCorners[i] = CGPointMake(0, 0);
+		
+		screenWidth = [[UIScreen mainScreen] bounds].size.width;
+		screenHeight = [[UIScreen mainScreen] bounds].size.height;
     }
     return self;
 }
@@ -86,6 +89,8 @@
 	}
 	CGContextStrokePath(context);
 	
+	/*
+	// Draws milestone points
 	CGContextSetFillColorWithColor(context, [UIColor purpleColor].CGColor);
 	for(int j=0; j<trackedPointsToDraw.size(); j++) {
 		if(trackedPointsToDraw[j] && trackedPointsToDraw[j]->active && trackedPointsToDraw[j]->age < 5) {
@@ -94,7 +99,8 @@
 		}
 	}
 	CGContextFillPath(context);
-
+	 */
+	 
 	// Draw found object
 	CGContextSetStrokeColorWithColor(context, [UIColor whiteColor].CGColor);
     CGContextSetLineWidth(context, 3.0);
@@ -123,8 +129,8 @@
 - (CGPoint) getScreenCoord:(CGPoint)imgPoint {
 	CGPoint _out;
 	// MAGIC NUMBERS ALERT
-	_out.x = self.frame.size.width-imgPoint.y*320/480;
-	_out.y = imgPoint.x*480/640;
+	_out.x = self.frame.size.width-imgPoint.y*screenWidth/480;
+	_out.y = imgPoint.x*screenHeight/640;
 	return _out;
 }
 

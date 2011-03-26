@@ -23,6 +23,7 @@ using namespace std;
 		useFerns = YES;
         // Initialization code.
 		matrix = Mat(3,3, CV_64F);
+		trained = NO;
     }
     return self;
 }
@@ -37,6 +38,7 @@ using namespace std;
 		destKeyPoints = destPoints;
 		sourceDescriptorsAreFresh = NO;
 		destDescriptorsAreFresh = YES;
+		trained = NO;
 	}
 	return self;
 }
@@ -73,6 +75,7 @@ using namespace std;
 }
 
 - (void) setSourceKeyPoints:(std::vector<cv::KeyPoint> *) keyPointPointer {
+	trained = NO;
 	sourceKeyPoints = *keyPointPointer;
 }
 - (void) setDestKeyPoints:(std::vector<cv::KeyPoint> *) keyPointPointer {
@@ -86,8 +89,9 @@ using namespace std;
 	return destImage;
 }
 - (void) setSourceImage: (cv::Mat*) imageMat {
+	trained = NO;
 	sourceImage = *imageMat;
-	sourceDescriptorsAreFresh = NO;
+	sourceDescriptorsAreFresh = NO;	
 }
 - (void) setDestImage: (cv::Mat*) imageMat {
 	destImage = imageMat;
@@ -97,37 +101,108 @@ using namespace std;
 #pragma mark -
 #pragma mark Calculation
 
+- (void) train {
+	trained = NO;
+	NSLog(@"Need to train to source image...");
+	//scale  z-rotation       tilt
+	PatchGenerator patchGen(0,256,5,true,0.1,1.0,-CV_PI/6,CV_PI/6,-CV_PI/2,CV_PI/2);
+	fern.setVerbose(true);
+	//for(int i=0; i<sourceKeyPoints.size(); i++) 
+	//	NSLog(@"%f , %f", sourceKeyPoints[i].pt.x, sourceKeyPoints[i].pt.y);
+	//NSLog(@"Source keypoint size: %i", sourceKeyPoints[0].pt.y);
+	fern.trainFromSingleView(sourceImage, sourceKeyPoints,
+							 32, (int)sourceKeyPoints.size(), 20, 10, 1000,
+							 FernClassifier::COMPRESSION_NONE, patchGen);
+	NSLog(@"Training complete!");
+	sourceDescriptorsAreFresh = YES;
+	trained = YES;
+}
+- (BOOL) isTrained {
+	return trained;
+}
+
 - (void) calculate {
 	if(useFerns) {	// Use Ferns
 		// Based on find_obj_ferns.cpp in OpenCV samples directory
 		// Edited to remove LDetector, as corner detection is done using FAST
 		// ------------------------------------------------------------------
-		NSLog(@"Starting fern matcher.");
-		if(!sourceDescriptorsAreFresh) {
-			NSLog(@"Need to classify source image...");
-			cv::Size patchSize(32, 32);
-			//PatchGenerator patchGen(0,256,5,true,0.3,1.0,-CV_PI/2,CV_PI/2,-CV_PI/2,CV_PI/2);	
-			PatchGenerator patchGen(0,256,5,true,0.3,1.0,-CV_PI/2,CV_PI/2,-CV_PI/2,CV_PI/2);	
-
-			// Set the source image to be the only entry in the object pyramid for now
-			vector<Mat> objpyr;	objpyr.push_back(sourceImage);
-			NSLog(@"Training to source image...");
-			detector.setVerbose(true);
-			printf("yo");
-																//   M    S   # warped patches	<-- affect memory usage, speed, accuracy
-			detector.train(objpyr, sourceKeyPoints, patchSize.width, 10, 8, 1000, LDetector(), patchGen);
+		/*if(!sourceDescriptorsAreFresh) {
+			NSLog(@"Need to train to source image...");
+												//scale  z-rotation       tilt
+			PatchGenerator patchGen(0,256,5,true,0.1,1.0,-CV_PI/6,CV_PI/6,-CV_PI/2,CV_PI/2);
+			fern.setVerbose(true);
+			fern.trainFromSingleView(sourceImage, sourceKeyPoints,
+											   32, (int)sourceKeyPoints.size(), 100, 8, 500,
+											   FernClassifier::COMPRESSION_NONE, patchGen);
 			NSLog(@"Training complete!");
 			sourceDescriptorsAreFresh = YES;
-		}	
-		// Set up structures for detection
-		vector<Mat> imgpyr; imgpyr.push_back(*destImage);
-		vector<int> pairs;				// Will store matched keypoint indices
-		vector<Point2f> dst_corners;	// Will store match corners
-		// Run the detector
-		NSLog(@"Detecting source in image...");
-		bool found = detector(imgpyr, *destKeyPoints, matrix, dst_corners, &pairs);
-		if(found) NSLog(@"Homography calculated OK!");
-		else NSLog(@"Homography could not be calculated.");
+		}
+		*/
+		
+		if(trained) {
+			// Below is modified from planardetect.cpp OpenCV sample
+			int i, j, m = (int)sourceKeyPoints.size(), n = (int)destKeyPoints->size();
+			vector<int> bestMatches(m, -1);
+			vector<float> maxLogProb(m, -FLT_MAX);
+			vector<float> signature;
+			vector<Point2f> fromPt, toPt;
+			
+			float firstBestIndex = -1, secondBestIndex = -1;
+			float firstBestProb = -FLT_MAX, secondBestProb = -FLT_MAX;
+			for( i = 0; i < n; i++ )
+			{
+				firstBestIndex = -1; secondBestIndex = -1;
+				firstBestProb = -FLT_MAX; secondBestProb = -FLT_MAX;
+				KeyPoint kpt = (*destKeyPoints)[i];
+				int firstBestIndex = fern(*destImage, kpt.pt, signature);	// Returns the point index of the most likely match
+																// Signature contains probabilities of a match with each source keypoint
+				if( firstBestIndex >= 0 && (bestMatches[firstBestIndex] < 0 || signature[firstBestIndex] > maxLogProb[firstBestIndex]))	// If this is the new best match for a point, update the match index array
+				{
+					firstBestProb = signature[firstBestIndex];
+					// Find second best match
+					for(j=0; j<m; j++) {
+						if(j != firstBestIndex && signature[j] > secondBestProb) {
+							secondBestIndex = j;
+							secondBestProb = signature[j];
+						}
+					}
+					// Compare ratio of first and second best matches
+					
+					//if(firstBestProb-secondBestProb > 3) {
+					if(firstBestProb > -90 && firstBestProb-secondBestProb > 4) {
+						//NSLog(@"Good point ratio: %f", firstBestProb-secondBestProb);
+						//NSLog(@"Good point: %f", firstBestProb);
+						
+						//NSLog(@"New best match for point %i with probability %f (beats %f)", k, signature[k], maxLogProb[k]);
+						maxLogProb[firstBestIndex] = signature[firstBestIndex];
+						bestMatches[firstBestIndex] = i;
+					}
+					//else
+						//NSLog(@"Bad point ratio: %f", firstBestProb-secondBestProb);
+				}
+			}
+			
+			pairs.resize(0);
+			
+			float sumLogProb = 0;
+			for( i = 0; i < m; i++ ) {
+				if( bestMatches[i] >= 0 )
+				{
+					fromPt.push_back(sourceKeyPoints[i].pt);
+					toPt.push_back((*destKeyPoints)[bestMatches[i]].pt);
+					//NSLog(@"Log prob: %f", maxLogProb[i]);
+					sumLogProb += maxLogProb[i];
+				}
+			}
+			
+			NSLog(@"Found %i points with average log prob %f", (int)fromPt.size(), sumLogProb/(float)fromPt.size());
+			if( fromPt.size() >= 4 ) {
+				vector<uchar> mask;
+				matrix = findHomography(Mat(fromPt), Mat(toPt), mask, RANSAC, 2);
+				if(matrix.data !=0) NSLog(@"Successfully found homography!");
+			}
+			else NSLog(@"Source image not detected.");
+		}			
 	}
 	else { // Use SURF
 		// Based on find_obj.cpp in OpenCV samples directory

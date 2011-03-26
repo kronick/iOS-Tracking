@@ -89,7 +89,7 @@ using namespace cv;
 
 - (void)addPoint:(CGPoint)point inImage:(cv::Mat *)img {
 	// Create new TrackedPoint
-	TrackedPoint *_tp = [[[TrackedPoint alloc] initWithPoint:point andImage:img] retain];
+	TrackedPoint *_tp = [[TrackedPoint alloc] initWithPoint:point andImage:img];
 	
 	trackedPoints.push_back(_tp);
 	
@@ -100,8 +100,10 @@ using namespace cv;
 
 
 - (void)clearTrackedPoints {
+	for(int i=0; i<trackedPoints.size(); i++)
+		[trackedPoints[i] release];
+
 	trackedPoints.clear();
-	
 	mTrackedPointGrid.clear();
 	
 	// Initialize the point grid
@@ -121,9 +123,11 @@ using namespace cv;
 
 - (void)tick {
 	for(int i=0; i<trackedPoints.size(); i++) {
-		[trackedPoints[i] tick];
-		if(trackedPoints[i]->age > maxAge) {
-			trackedPoints[i]->active = NO;
+		if(trackedPoints[i] != nil) {
+			[trackedPoints[i] tick];
+			if(trackedPoints[i]->age > maxAge) {
+				trackedPoints[i]->active = NO;
+			}
 		}
 	}
 }

@@ -10,6 +10,8 @@
 #import "PointTracker.h"
 
 @interface OverlayView : UIView {
+@private
+	int screenWidth, screenHeight;
 	
 @public
 	std::vector<cv::KeyPoint> mDetectedKeyPoints;

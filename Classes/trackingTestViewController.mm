@@ -66,8 +66,8 @@ using namespace cv;
 																		forKey:(id)kCVPixelBufferPixelFormatTypeKey];
 	dispatch_release(queue);
 	
-	self.captureVideoOutput.minFrameDuration = CMTimeMake(1, 15);
-	[NSTimer scheduledTimerWithTimeInterval:1/15. target:self selector:@selector(redrawKeyPoints:) userInfo:nil repeats:YES];
+	self.captureVideoOutput.minFrameDuration = CMTimeMake(1, 25);
+	[NSTimer scheduledTimerWithTimeInterval:1/25. target:self selector:@selector(redrawKeyPoints:) userInfo:nil repeats:YES];
 	
 	AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
 	AVCaptureDeviceInput *captureInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:nil];
@@ -133,19 +133,21 @@ using namespace cv;
 
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
-    IplImage *image = [Utilities IplImageFromSampleBuffer:sampleBuffer];
+	IplImage *image = [Utilities IplImageFromSampleBuffer:sampleBuffer];
 	
 	//vector<cv::KeyPoint> keyPoints;
 	cv::FAST(image, mDetectedKeyPoints, FASTThreshold, true);
 	//NSLog(@"Keypoints found: %i, Threshold: %f", mDetectedKeyPoints.size(), FASTThreshold);
 	// Dynamically adjust threshold to have about 150 points
 	if(fabs(mDetectedKeyPoints.size() - keyPointTarget) > keyPointTarget  * .1) {
-		FASTThreshold += (float)(mDetectedKeyPoints.size() - (float)keyPointTarget) * .05;
+		FASTThreshold += (float)(mDetectedKeyPoints.size() - (float)keyPointTarget) * .01;
 		if(FASTThreshold > 200) FASTThreshold = 200;
 		if(FASTThreshold < 1)   FASTThreshold = 1;
 	}
 	//NSLog(@"Threshold: %f", FASTThreshold);
-	mCapturedImage = cv::Mat(image);
+	//mCapturedImage.release();
+	mCapturedImage = cv::Mat(image).clone();
+	cvReleaseImage(&image);
 	
 	if(NO && pointTracker->tracking) {
 		CGPoint pt;
@@ -168,13 +170,16 @@ using namespace cv;
 		setNewMilestone = NO;
 	}
 	
+
+	[self findReferenceImage];
+	
 	frameCount++;
 	
 	// Calculate frame rate
 	NSDate *d = [NSDate date];
 	double frameRate = 1 / ([d timeIntervalSinceReferenceDate] - lastTime);
 	lastTime = [d timeIntervalSinceReferenceDate];
-	//NSLog(@"FPS: %f with %i keypoints", frameRate, mDetectedKeyPoints.size());
+	NSLog(@"FPS: %f with %i keypoints", frameRate, mDetectedKeyPoints.size());
 }
 
 
@@ -186,14 +191,15 @@ using namespace cv;
 	vector<KeyPoint> sourceKeys = mDetectedKeyPoints;
 	[objectFinder setSourceImage:&mMilestoneImage];
 	[objectFinder setSourceKeyPoints:&mMilestoneKeyPoints];
+	[objectFinder train];
 }
 - (IBAction) findReferenceImage {
-	if([objectFinder sourceKeyPoints].size() > 0) {
+	if([objectFinder isTrained] && [objectFinder sourceKeyPoints].size() > 0) {
 		vector<KeyPoint> destKeys = mDetectedKeyPoints;
 		[objectFinder setDestImage:&mCapturedImage];
 		[objectFinder setDestKeyPoints:&destKeys];
 		[objectFinder calculate];
-		NSLog(@"Homography: %@", [objectFinder getArray]);
+		//NSLog(@"Homography: %@", [objectFinder getArray]);
 		//Mat xformed =  [objectFinder getMatrix] * (Mat_<double>(3,1) << 1,1,1);
 		Mat h = [objectFinder getMatrix];
 		CGPoint corners[4];
@@ -214,7 +220,7 @@ using namespace cv;
 			double X = (h.at<double>(0,0)*x + h.at<double>(0,1)*y + h.at<double>(0,2))*Z;
 			double Y = (h.at<double>(1,0)*x + h.at<double>(1,1)*y + h.at<double>(1,2))*Z;
 			corners[i] = CGPointMake(X, Y);
-			NSLog(@"Corner %i: (%f, %f)", i, X, Y);
+			//NSLog(@"Corner %i: (%f, %f)", i, X, Y);
 		}
 		
 		[self.overlayView setFoundCorners:corners];
