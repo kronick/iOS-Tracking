@@ -14,8 +14,9 @@ using namespace cv;
 
 @implementation trackingTestViewController
 
-@synthesize captureSession, capturePreview, captureVideoOutput, previewView, overlayView;
+@synthesize captureSession, capturePreview, captureVideoOutput, previewView;
 @synthesize pointTracker, objectFinder;
+@synthesize glView;
 
 /*
 // The designated initializer. Override to perform setup that is required before the view is loaded.
@@ -56,6 +57,7 @@ using namespace cv;
 	self.pointTracker = [[[PointTracker alloc] init] autorelease];
 	
 	// Set up the capture session
+	// ---------------------------------------------------------------
 	self.captureSession = [[AVCaptureSession alloc] init];
 	self.captureSession.sessionPreset = AVCaptureSessionPreset640x480;
 	
@@ -82,26 +84,27 @@ using namespace cv;
 	
 	NSLog(@"Setting up preview layer...");
 	// Set up the preview layer
+	// ---------------------------------------------------------------
 	CALayer *viewPreviewLayer = self.previewView.layer;
 	self.capturePreview = [[[AVCaptureVideoPreviewLayer alloc] initWithSession:captureSession] autorelease];
 	self.capturePreview.frame = self.previewView.bounds;
 	self.capturePreview.videoGravity = AVLayerVideoGravityResize;
 	[viewPreviewLayer addSublayer:self.capturePreview];
 	
-	self.overlayView = [[[OverlayView alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
-	[self.view insertSubview:self.overlayView atIndex:1];
+	//self.overlayView = [[[OverlayView alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
+	//[self.view insertSubview:self.overlayView atIndex:1];
 	
-	self.overlayView.pointTracker = self.pointTracker;
+
+	
+	// Set up the OpenGL view
+	// ---------------------------------------------------------------
+	NSLog(@"Setting up OpenGL rendering layer...");
+	self.glView = [[GLView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+	[self.view addSubview:self.glView];
+	
 	NSLog(@"View Did Load");
 }
 
-/*
-// Override to allow orientations other than the default portrait orientation.
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    // Return YES for supported orientations
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
-}
-*/
 
 - (void)didReceiveMemoryWarning {
 	// Releases the view if it doesn't have a superview.
@@ -124,7 +127,7 @@ using namespace cv;
 
 - (void)redrawKeyPoints:(NSTimer *)timer {
 	//[self.overlayView setNeedsLayout];
-	[self.overlayView setNeedsDisplay];
+	//[self.overlayView setNeedsDisplay];
 }
 
 
@@ -148,22 +151,9 @@ using namespace cv;
 	//mCapturedImage.release();
 	mCapturedImage = cv::Mat(image).clone();
 	cvReleaseImage(&image);
-	
-	if(NO && pointTracker->tracking) {
-		CGPoint pt;
-		// Search in the area around each keypoint for matches to track
-		for(int i=0; i<mDetectedKeyPoints.size(); i++) {
-			pt.x = mDetectedKeyPoints[i].pt.x;
-			pt.y = mDetectedKeyPoints[i].pt.y;
-			[pointTracker checkPoint:pt inImage:&mCapturedImage];
-		}
-	}
-	[self.pointTracker tick];
-	if([self.pointTracker countActivePoints] <= keyPointTarget * .05) {
-		setNewMilestone = YES;
-	}
-	
-	[self.overlayView setKeyPoints:mDetectedKeyPoints];
+	 
+	//[self.overlayView setKeyPoints:mDetectedKeyPoints];
+	[self.glView setKeyPoints:mDetectedKeyPoints];
 	
 	if(setNewMilestone && fabs(mDetectedKeyPoints.size() - keyPointTarget) < keyPointTarget * .1) {
 		[self setMilestone];
@@ -174,6 +164,8 @@ using namespace cv;
 	[self findReferenceImage];
 	
 	frameCount++;
+	
+	//[self redrawKeyPoints:nil];
 	
 	// Calculate frame rate
 	NSDate *d = [NSDate date];
@@ -188,19 +180,26 @@ using namespace cv;
 
 - (IBAction) setReferenceImage {
 	NSLog(@"Finding matches...");
+	[self setMilestone];
 	vector<KeyPoint> sourceKeys = mDetectedKeyPoints;
 	[objectFinder setSourceImage:&mMilestoneImage];
 	[objectFinder setSourceKeyPoints:&mMilestoneKeyPoints];
 	[objectFinder train];
+	[objectFinder saveTrainingData:@"someshit.yaml.gz"];
+}
+- (IBAction) loadReference {
+	[objectFinder loadTrainingData:@"someshit.yaml.gz"];
 }
 - (IBAction) findReferenceImage {
-	if([objectFinder isTrained] && [objectFinder sourceKeyPoints].size() > 0) {
+	if([objectFinder isTrained]) {	// && [objectFinder sourceKeyPoints].size() > 0
 		vector<KeyPoint> destKeys = mDetectedKeyPoints;
 		[objectFinder setDestImage:&mCapturedImage];
 		[objectFinder setDestKeyPoints:&destKeys];
-		[objectFinder calculate];
-		//NSLog(@"Homography: %@", [objectFinder getArray]);
-		//Mat xformed =  [objectFinder getMatrix] * (Mat_<double>(3,1) << 1,1,1);
+		BOOL success = [objectFinder calculate];
+		
+		if(success) NSLog(@"Object detected!");
+		else		NSLog(@"Object not detected.");
+		
 		Mat h = [objectFinder getMatrix];
 		CGPoint corners[4];
 		for(int i=0; i<4; i++) {
@@ -209,31 +208,26 @@ using namespace cv;
 				case 0:
 					x=0; y=0; break;
 				case 1:
-					x=mMilestoneImage.cols; y=0; break;
+					x=mCapturedImage.cols; y=0; break;
 				case 2:
-					x=mMilestoneImage.cols; y=mMilestoneImage.rows; break;
+					x=mCapturedImage.cols; y=mCapturedImage.rows; break;
 				case 3:
-					x=0; y=mMilestoneImage.rows; break;
+					x=0; y=mCapturedImage.rows; break;
 					
 			}
 			double Z = 1./(h.at<double>(2,0)*x + h.at<double>(2,1)*y + h.at<double>(2,2));
 			double X = (h.at<double>(0,0)*x + h.at<double>(0,1)*y + h.at<double>(0,2))*Z;
 			double Y = (h.at<double>(1,0)*x + h.at<double>(1,1)*y + h.at<double>(1,2))*Z;
-			corners[i] = CGPointMake(X, Y);
-			//NSLog(@"Corner %i: (%f, %f)", i, X, Y);
+			corners[i] = success ? CGPointMake(X, Y) : CGPointMake(0, 0);
 		}
 		
-		[self.overlayView setFoundCorners:corners];
+		[self.glView setFoundCorners:corners];
+		[self.glView setmodelviewMatrix:[objectFinder getModelviewMatrix]];
+		[self.glView setDetected:success];
 	}
 }
 
 - (IBAction) track {
-	/*NSLog(@"Looking for matches...");
-	NSLog(@"%i x %i", mCapturedImage.rows, mCapturedImage.cols);
-	cv::SURF surf;
-	surf(mReferenceImage, cv::Mat(), mReferenceKeyPoints, mReferenceDescriptor, true);
-	NSLog(@"%i matches found.", mReferenceDescriptor.size());
-	*/
 	[NSTimer timerWithTimeInterval:0.5 target:self selector:@selector(updateMatch:) userInfo:nil repeats:YES];
 	
 	setNewMilestone = YES;
@@ -243,17 +237,9 @@ using namespace cv;
 }
 
 - (void) setMilestone {
-	pointTracker->tracking = NO;
-	[pointTracker clearTrackedPoints];
 	mMilestoneImage = mCapturedImage.clone(); 
 	mMilestoneKeyPoints = mDetectedKeyPoints;
-	CGPoint pt;
-	for(int i=0; i<mMilestoneKeyPoints.size(); i++) {
-		pt.x = mMilestoneKeyPoints[i].pt.x;
-		pt.y = mMilestoneKeyPoints[i].pt.y;
-		[pointTracker addPoint:pt inImage:&mMilestoneImage];
-	}
-	pointTracker->tracking = YES;
+
 }
 
 

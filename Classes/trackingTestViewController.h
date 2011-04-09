@@ -16,12 +16,14 @@
 
 #import "overlayView.h"
 
+#import "GLView.h"
+
 @interface trackingTestViewController : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate> {
 	AVCaptureSession *captureSession;
 	AVCaptureVideoPreviewLayer *capturePreview;
 	AVCaptureVideoDataOutput *captureVideoOutput;
 	
-	OverlayView *overlayView;
+	//OverlayView *overlayView;
 	
 	cv::Mat mReferenceImage;
 	cv::Mat mCapturedImage;
@@ -34,30 +36,34 @@
 	
 	NSTimeInterval lastTime;
 	
-	cv::Mat mMilestoneImage;
-	std::vector<cv::KeyPoint> mMilestoneKeyPoints;
-	std::vector<std::vector<std::vector<cv::KeyPoint *> > > mKeyPointGrid;
-	BOOL mMilestoneReady;
-	BOOL setNewMilestone;
-	
-	PointTracker *pointTracker;
-	
 	Homography *objectFinder;
 	
 	vector<float> mReferenceDescriptor;
 	
 	cv::Ptr<cv::GenericDescriptorMatcher> mFernMatcher;
 	
+	GLView *glView;
+	
+	// not used anymore
 	int GRID_X;
 	int GRID_Y;
+	cv::Mat mMilestoneImage;
+	std::vector<cv::KeyPoint> mMilestoneKeyPoints;
+	std::vector<std::vector<std::vector<cv::KeyPoint *> > > mKeyPointGrid;
+	BOOL mMilestoneReady;
+	BOOL setNewMilestone;
+	PointTracker *pointTracker;
+	
 }
 
 @property (nonatomic,retain) PointTracker *pointTracker;
 @property (nonatomic,retain) Homography *objectFinder;
+@property (nonatomic,retain) GLView *glView;
 
 - (void)redrawKeyPoints:(NSTimer *)timer;
 
 - (IBAction)setReferenceImage;
+- (IBAction)loadReference;
 - (IBAction)findReferenceImage;
 - (IBAction)track;
 - (void)updateMatch:(NSTimer*)theTimer;
@@ -66,7 +72,7 @@
 
 
 @property (nonatomic,retain) IBOutlet UIView *previewView;
-@property (nonatomic,retain) IBOutlet OverlayView *overlayView;
+//@property (nonatomic,retain) IBOutlet OverlayView *overlayView;
 
 @property (nonatomic,retain) AVCaptureSession *captureSession;
 @property (nonatomic,retain) AVCaptureVideoPreviewLayer *capturePreview;

@@ -16,6 +16,7 @@
 @public
 	std::vector<cv::KeyPoint> mDetectedKeyPoints;
 	PointTracker *pointTracker;
+	BOOL foundSource;
 	
 	CGPoint foundCorners[4];
 }
@@ -25,4 +26,5 @@
 - (void) setKeyPoints:(std::vector<cv::KeyPoint>) newKeyPoints;
 - (CGPoint) getScreenCoord:(CGPoint)imgPoint;
 - (void) setFoundCorners:(CGPoint[]) corners;
+- (void) setFoundSource:(BOOL)b;
 @end

@@ -6,6 +6,10 @@
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
+typedef struct {
+	cv::Mat homography;
+	int inliers;
+} HomographyEstimate;
 
 @interface Homography : NSObject {
 	BOOL useFerns;
@@ -16,12 +20,21 @@
 	cv::Mat sourceDescriptors;
 	cv::Mat destDescriptors;
 	
+	cv::Mat cameraMatrix;
+	cv::Mat rotationVector;
+	cv::Mat translationVector; 
+	cv::Mat modelviewMatrix;
+	
+	CvMat rotationVec;
+	CvMat translationVec;
+	CvMat cameraMat;
+	
 	std::vector<int> keyPointMatches;
 	cv::Mat matrix;
 	
 	BOOL sourceDescriptorsAreFresh;	// Reset after image is changed
 	BOOL destDescriptorsAreFresh;
-	BOOL trained;
+	BOOL trained; 
 	cv::PlanarObjectDetector detector;	// Wraps Ferns-based matcher
 	cv::FernClassifier fern;
 	std::vector<int> pairs;
@@ -31,9 +44,13 @@
 
 - (NSArray *) getArray;
 - (cv::Mat) getMatrix;
+- (cv::Mat) getModelviewMatrix;
 
 - (void) train;
-- (void) calculate;
+- (BOOL) calculate;
+- (void) loadTrainingData:(NSString *)resourceName;
+- (void) saveTrainingData:(NSString *)resourceName;
+
 - (void) setSourceKeyPoints:(std::vector<cv::KeyPoint> *) keyPointPointer;
 - (void) setDestKeyPoints:(std::vector<cv::KeyPoint> *) keyPointPointer;
 - (std::vector<cv::KeyPoint>) sourceKeyPoints;
@@ -46,4 +63,5 @@
 
 - (BOOL) isTrained;
 
+- (HomographyEstimate) findHomographyFrom:(cv::Mat&) fromPoints To:(cv::Mat&) toPoints;
 @end
