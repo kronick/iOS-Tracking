@@ -16,7 +16,8 @@ using namespace cv;
 
 @synthesize captureSession, capturePreview, captureVideoOutput, previewView;
 @synthesize pointTracker, objectFinder;
-@synthesize glView;
+@synthesize glView, statusView;
+@synthesize motionManager;
 
 /*
 // The designated initializer. Override to perform setup that is required before the view is loaded.
@@ -79,9 +80,6 @@ using namespace cv;
 	[self.captureSession addInput:captureInput];
 	[self.captureSession commitConfiguration];
 	
-	[self.captureSession startRunning];
-	
-	
 	NSLog(@"Setting up preview layer...");
 	// Set up the preview layer
 	// ---------------------------------------------------------------
@@ -91,16 +89,24 @@ using namespace cv;
 	self.capturePreview.videoGravity = AVLayerVideoGravityResize;
 	[viewPreviewLayer addSublayer:self.capturePreview];
 	
-	//self.overlayView = [[[OverlayView alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
-	//[self.view insertSubview:self.overlayView atIndex:1];
-	
-
-	
 	// Set up the OpenGL view
 	// ---------------------------------------------------------------
 	NSLog(@"Setting up OpenGL rendering layer...");
 	self.glView = [[GLView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-	[self.view addSubview:self.glView];
+	[self.view insertSubview:self.glView atIndex:1];
+	
+	
+	
+	[self.captureSession startRunning];
+	
+	
+	// Set up Core Motion services
+	if(self.motionManager == nil) {
+		self.motionManager = [[CMMotionManager alloc] init];
+	}
+	
+	motionManager.deviceMotionUpdateInterval = 0.01;
+	[motionManager startDeviceMotionUpdates];
 	
 	NSLog(@"View Did Load");
 }
@@ -141,7 +147,7 @@ using namespace cv;
 	//vector<cv::KeyPoint> keyPoints;
 	cv::FAST(image, mDetectedKeyPoints, FASTThreshold, true);
 	//NSLog(@"Keypoints found: %i, Threshold: %f", mDetectedKeyPoints.size(), FASTThreshold);
-	// Dynamically adjust threshold to have about 150 points
+	// Dynamically adjust threshold 
 	if(fabs(mDetectedKeyPoints.size() - keyPointTarget) > keyPointTarget  * .1) {
 		FASTThreshold += (float)(mDetectedKeyPoints.size() - (float)keyPointTarget) * .01;
 		if(FASTThreshold > 200) FASTThreshold = 200;
@@ -180,15 +186,24 @@ using namespace cv;
 
 - (IBAction) setReferenceImage {
 	NSLog(@"Finding matches...");
+	[self.statusView setHidden:NO];
+	[self.statusView setBackgroundColor:[UIColor yellowColor]];
+	
 	[self setMilestone];
 	vector<KeyPoint> sourceKeys = mDetectedKeyPoints;
 	[objectFinder setSourceImage:&mMilestoneImage];
 	[objectFinder setSourceKeyPoints:&mMilestoneKeyPoints];
 	[objectFinder train];
 	[objectFinder saveTrainingData:@"someshit.yaml.gz"];
+	keyPointTarget = 300;
+	[self.statusView setBackgroundColor:[UIColor greenColor]];
 }
 - (IBAction) loadReference {
+	[self.statusView setHidden:NO];
+	[self.statusView setBackgroundColor:[UIColor yellowColor]];
 	[objectFinder loadTrainingData:@"someshit.yaml.gz"];
+	[self.statusView setBackgroundColor:[UIColor greenColor]];
+	keyPointTarget = 300;
 }
 - (IBAction) findReferenceImage {
 	if([objectFinder isTrained]) {	// && [objectFinder sourceKeyPoints].size() > 0
@@ -201,6 +216,7 @@ using namespace cv;
 		else		NSLog(@"Object not detected.");
 		
 		Mat h = [objectFinder getMatrix];
+		
 		CGPoint corners[4];
 		for(int i=0; i<4; i++) {
 			double x,y;
@@ -215,15 +231,61 @@ using namespace cv;
 					x=0; y=mCapturedImage.rows; break;
 					
 			}
-			double Z = 1./(h.at<double>(2,0)*x + h.at<double>(2,1)*y + h.at<double>(2,2));
-			double X = (h.at<double>(0,0)*x + h.at<double>(0,1)*y + h.at<double>(0,2))*Z;
-			double Y = (h.at<double>(1,0)*x + h.at<double>(1,1)*y + h.at<double>(1,2))*Z;
+			Mat P = (Mat_<double>(3,1) << x, y, 1);
+			//Mat P = (Mat_<double>(3,1) << x, y, 1);
+			P = h * P;
+			double W = P.at<double>(2,0);
+			double X = P.at<double>(0,0) / W;
+			double Y = P.at<double>(1,0) / W;
+			
 			corners[i] = success ? CGPointMake(X, Y) : CGPointMake(0, 0);
 		}
 		
 		[self.glView setFoundCorners:corners];
 		[self.glView setmodelviewMatrix:[objectFinder getModelviewMatrix]];
 		[self.glView setDetected:success];
+	}
+	else {
+		// Respond to CMDeviceMotion data
+		CMRotationMatrix deviceR = motionManager.deviceMotion.attitude.rotationMatrix;
+		cv::Mat rotationMatrix = (Mat_<float>(3,3) <<	deviceR.m11 , deviceR.m21, deviceR.m31,
+														deviceR.m12 , deviceR.m22, deviceR.m32,
+														deviceR.m13 , deviceR.m23, deviceR.m33);
+
+		cv::Mat rotate90 = (Mat_<float>(3,3) << 0,1,0,
+												1,0,0,
+												0,0,1);
+		
+		cv::Mat flipX = (Mat_<float>(3,3) <<	-1,0,0,
+												0,1,0,
+												0,0,-1);
+		
+		rotationMatrix = rotationMatrix.t();
+		rotationMatrix = flipX * rotationMatrix * flipX;
+		rotationMatrix = rotate90 * rotationMatrix;
+		rotationMatrix = rotationMatrix.t();
+		
+		cv::Mat deviceMatrix = (Mat_<float>(4,4) << rotationMatrix.at<float>(0,0) , rotationMatrix.at<float>(0,1) , rotationMatrix.at<float>(0,2) , 0,
+													rotationMatrix.at<float>(1,0) , rotationMatrix.at<float>(1,1) , rotationMatrix.at<float>(1,2) , 0,
+													rotationMatrix.at<float>(2,0) , rotationMatrix.at<float>(2,1) , rotationMatrix.at<float>(2,2) , 2,
+													0 , 0 , 0 , 1);
+
+		//deviceMatrix = deviceMatrix * flip_x;
+
+		NSLog(@"Original");
+		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(0,0), deviceMatrix.at<float>(0,1), deviceMatrix.at<float>(0,2),  deviceMatrix.at<float>(0,3));
+		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(1,0), deviceMatrix.at<float>(1,1), deviceMatrix.at<float>(1,2),  deviceMatrix.at<float>(1,3));
+		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(2,0), deviceMatrix.at<float>(2,1), deviceMatrix.at<float>(2,2),  deviceMatrix.at<float>(2,3));
+		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(3,0), deviceMatrix.at<float>(3,1), deviceMatrix.at<float>(3,2),  deviceMatrix.at<float>(3,3));
+		deviceMatrix = deviceMatrix.inv();
+		
+		[self.glView setmodelviewMatrix:deviceMatrix];
+		[self.glView setDetected:YES];
+		NSLog(@"Inverted:");
+		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(0,0), deviceMatrix.at<float>(0,1), deviceMatrix.at<float>(0,2),  deviceMatrix.at<float>(0,3));
+		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(1,0), deviceMatrix.at<float>(1,1), deviceMatrix.at<float>(1,2),  deviceMatrix.at<float>(1,3));
+		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(2,0), deviceMatrix.at<float>(2,1), deviceMatrix.at<float>(2,2),  deviceMatrix.at<float>(2,3));
+		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(3,0), deviceMatrix.at<float>(3,1), deviceMatrix.at<float>(3,2),  deviceMatrix.at<float>(3,3));
 	}
 }
 

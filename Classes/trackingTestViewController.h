@@ -18,6 +18,8 @@
 
 #import "GLView.h"
 
+#import <CoreMotion/CoreMotion.h>
+
 @interface trackingTestViewController : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate> {
 	AVCaptureSession *captureSession;
 	AVCaptureVideoPreviewLayer *capturePreview;
@@ -43,6 +45,7 @@
 	cv::Ptr<cv::GenericDescriptorMatcher> mFernMatcher;
 	
 	GLView *glView;
+	IBOutlet UIView *statusView;
 	
 	// not used anymore
 	int GRID_X;
@@ -54,11 +57,15 @@
 	BOOL setNewMilestone;
 	PointTracker *pointTracker;
 	
+	// Core motion sensors
+	CMMotionManager *motionManager;
 }
 
 @property (nonatomic,retain) PointTracker *pointTracker;
 @property (nonatomic,retain) Homography *objectFinder;
 @property (nonatomic,retain) GLView *glView;
+@property (nonatomic,retain) IBOutlet UIView *statusView;
+@property (nonatomic,retain) CMMotionManager *motionManager;
 
 - (void)redrawKeyPoints:(NSTimer *)timer;
 

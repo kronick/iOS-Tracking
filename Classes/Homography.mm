@@ -186,7 +186,22 @@ using namespace std;
 		// Based on find_obj_ferns.cpp in OpenCV samples directory
 		// Edited to remove LDetector, as corner detection is done using FAST
 		// ------------------------------------------------------------------
-		if(trained) {
+		if(!trained) {
+		Homography:
+			matrix = (Mat_<double>(3,3) << 0.258145, 0.031288 , 162.400510,
+											-0.170125 , 0.703209 , 79.328281,
+											-0.000528	, -0.000046 , 1.000000);
+			
+			modelviewMatrix = [self modelviewFromHomography:matrix];
+			
+			
+			NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(0,0), modelviewMatrix.at<float>(0,1), modelviewMatrix.at<float>(0,2),  modelviewMatrix.at<float>(0,3));
+			NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(1,0), modelviewMatrix.at<float>(1,1), modelviewMatrix.at<float>(1,2),  modelviewMatrix.at<float>(1,3));
+			NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(2,0), modelviewMatrix.at<float>(2,1), modelviewMatrix.at<float>(2,2),  modelviewMatrix.at<float>(2,3));
+			NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(3,0), modelviewMatrix.at<float>(3,1), modelviewMatrix.at<float>(3,2),  modelviewMatrix.at<float>(3,3));
+			return YES;
+		}
+		else {
 			// Below is modified from planardetect.cpp OpenCV sample
 			int i, j;
 			int m = fern.getClassCount();
@@ -218,7 +233,8 @@ using namespace std;
 					// Compare ratio of first and second best matches
 					
 					//if(firstBestProb-secondBestProb > 3) {
-					if(firstBestProb > -90 && firstBestProb-secondBestProb > 4) {
+					//if(firstBestProb > -90 && firstBestProb-secondBestProb > 4) {
+					if(firstBestProb-secondBestProb > 4) {
 						//NSLog(@"Good point ratio: %f", firstBestProb-secondBestProb);
 						//NSLog(@"Good point: %f", firstBestProb);
 						
@@ -240,7 +256,7 @@ using namespace std;
 				if( bestMatches[i] >= 0 )
 				{
 					fromPt.push_back(sourceKeyPoints[i].pt);
-					threeDPoints.push_back(Point3f(sourceKeyPoints[i].pt.x, sourceKeyPoints[i].pt.y, 0));
+					//threeDPoints.push_back(Point3f(sourceKeyPoints[i].pt.x, sourceKeyPoints[i].pt.y, 0));
 					toPt.push_back((*destKeyPoints)[bestMatches[i]].pt);
 					//NSLog(@"Log prob: %f", maxLogProb[i]);
 					sumLogProb += maxLogProb[i];
@@ -263,117 +279,14 @@ using namespace std;
 					return NO;
 				}
 				
-				NSLog(@"Successfully found homography!");
+				NSLog(@"Successfully found homography!");					
 				
-				// Find the corners
-				vector<Point2f> foundCorners;
-				vector<Point3f> originalCorners;
-				float foundCornerValues[8];
-				float originalCornerValues[12];
-				for(int i=0; i<4; i++) {
-					double x,y;
-					switch(i) {
-						case 0:
-							x=0; y=0; break;
-						case 1:
-							x=destImage->cols; y=0; break;
-						case 2:
-							x=destImage->cols; y=destImage->rows; break;
-						case 3:
-							x=0; y=destImage->rows; break;
-							
-					}
-					double Z = 1./(matrix.at<double>(2,0)*x + matrix.at<double>(2,1)*y + matrix.at<double>(2,2));
-					double X = (matrix.at<double>(0,0)*x + matrix.at<double>(0,1)*y + matrix.at<double>(0,2))*Z;
-					double Y = (matrix.at<double>(1,0)*x + matrix.at<double>(1,1)*y + matrix.at<double>(1,2))*Z;
-					foundCorners.push_back(Point2f((float)X, (float)Y));
-					originalCorners.push_back(Point3f((float)x,(float)y,0));
-					
-					foundCornerValues[i*2] = X;
-					foundCornerValues[i*2+1] = Y;
-					
-					originalCornerValues[i*3] = x;
-					originalCornerValues[i*3+1] = y;
-					originalCornerValues[i*3+2] = 0;
-					
-					//NSLog(@"Corner %i: (%f, %f)", i, X, Y);
-				}				
+				modelviewMatrix = [self modelviewFromHomography:matrix];
 				
-				// Decompose the Homography into translation and rotation vectors
-				// Based on: https://gist.github.com/740979/97f54a63eb5f61f8f2eb578d60eb44839556ff3f
-				
-				Mat inverseCameraMatrix = (Mat_<double>(3,3) << 1/cameraMatrix.at<double>(0,0) , 0 , -cameraMatrix.at<double>(0,2)/cameraMatrix.at<double>(0,0) ,
-																0 , 1/cameraMatrix.at<double>(1,1) , -cameraMatrix.at<double>(1,2)/cameraMatrix.at<double>(1,1) ,
-																0 , 0 , 1);
-				// Column vectors of homography
-				Mat h1 = (Mat_<double>(3,1) << matrix.at<double>(0,0) , matrix.at<double>(1,0) , matrix.at<double>(2,0));
-				Mat h2 = (Mat_<double>(3,1) << matrix.at<double>(0,1) , matrix.at<double>(1,1) , matrix.at<double>(2,1));
-				Mat h3 = (Mat_<double>(3,1) << matrix.at<double>(0,2) , matrix.at<double>(1,2) , matrix.at<double>(2,2));
-				
-				Mat inverseH1 = inverseCameraMatrix * h1;
-				double lambda = sqrt(h1.at<double>(0,0)*h1.at<double>(0,0) +
-									 h1.at<double>(1,0)*h1.at<double>(1,0) +
-									 h1.at<double>(2,0)*h1.at<double>(2,0));	// Just calculating the euclidean length of this column...
-				
-				
-				Mat rotationMatrix; 
-				
-				if(lambda != 0) {
-					lambda = 1/lambda;
-					// Normalize inverseCameraMatrix
-					inverseCameraMatrix.at<double>(0,0) *= lambda;
-					inverseCameraMatrix.at<double>(1,0) *= lambda;
-					inverseCameraMatrix.at<double>(2,0) *= lambda;
-					inverseCameraMatrix.at<double>(0,1) *= lambda;
-					inverseCameraMatrix.at<double>(1,1) *= lambda;
-					inverseCameraMatrix.at<double>(2,1) *= lambda;
-					inverseCameraMatrix.at<double>(0,2) *= lambda;
-					inverseCameraMatrix.at<double>(1,2) *= lambda;
-					inverseCameraMatrix.at<double>(2,2) *= lambda;
-					
-					// Column vectors of rotation matrix
-					Mat r1 = inverseCameraMatrix * h1;
-					Mat r2 = inverseCameraMatrix * h2;
-					Mat r3 = r1.cross(r2);				// Orthogonal to r1 and r2
-					
-					//NSLog(@"R1: %f\t%f\t%f", r1.at<double>(0,0)*100, r1.at<double>(1,0)*100, r1.at<double>(2,0)*100);
-					//NSLog(@"R2: %f\t%f\t%f", r2.at<double>(0,0)*100, r2.at<double>(1,0)*100, r2.at<double>(2,0)*100);
-					//NSLog(@"R3: %f\t%f\t%f", r3.at<double>(0,0)*100, r3.at<double>(1,0)*100, r3.at<double>(2,0)*100);
-					
-					// Put rotation columns into rotation matrix
-					rotationMatrix = (Mat_<double>(3,3) <<		r1.at<double>(0,0) , -r2.at<double>(0,0) , -r3.at<double>(0,0) ,
-																-r1.at<double>(1,0) , r2.at<double>(1,0) , r3.at<double>(1,0) ,
-																-r1.at<double>(2,0) , r2.at<double>(2,0) , r3.at<double>(2,0));
-					
-					//rotationMatrix = rotationMatrix.t();
-					
-					// Translation vector T
-					translationVector = inverseCameraMatrix * h3;
-					translationVector.at<double>(0,0) *= 1;
-					translationVector.at<double>(1,0) *= -1;
-					translationVector.at<double>(2,0) *= -1;
-					
-					SVD decomposed(rotationMatrix);	// I don't really know what this does. But it works. Maybe it removes the translation components?
-					rotationMatrix = decomposed.u * decomposed.vt;
-					
-				}
-				else {
-					NSLog(@"Lambda was 0...");
-				}
-				
-				//rotationMatrix = rotationMatrix.t();
-				
-				modelviewMatrix = (Mat_<float>(4,4) <<	rotationMatrix.at<double>(0,0), rotationMatrix.at<double>(0,1), rotationMatrix.at<double>(0,2), translationVector.at<double>(0,0),
-														rotationMatrix.at<double>(1,0), rotationMatrix.at<double>(1,1), rotationMatrix.at<double>(1,2), translationVector.at<double>(1,0),
-														rotationMatrix.at<double>(2,0), rotationMatrix.at<double>(2,1), rotationMatrix.at<double>(2,2), translationVector.at<double>(2,0),
-														0,0,0,1);
-				
-				///cv::solvePnP(Mat(originalCorners), Mat(foundCorners), cameraMatrix, Mat(), rotationVector, translationVector);
-				//NSLog(@"Translation: %f, %f, %f", translationVector.at<double>(0,0), translationVector.at<double>(1,0), translationVector.at<double>(2,0));
-				//NSLog(@"Rotation:");
-				//NSLog(@"%f, %f, %f", rotationMatrix.at<double>(0,0), rotationMatrix.at<double>(0,1), rotationMatrix.at<double>(0,2));			
-				//NSLog(@"%f, %f, %f", rotationMatrix.at<double>(1,0), rotationMatrix.at<double>(1,1), rotationMatrix.at<double>(1,2));			
-				//NSLog(@"%f, %f, %f", rotationMatrix.at<double>(2,0), rotationMatrix.at<double>(2,1), rotationMatrix.at<double>(2,2));			
+				NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(0,0), modelviewMatrix.at<float>(0,1), modelviewMatrix.at<float>(0,2),  modelviewMatrix.at<float>(0,3));
+				NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(1,0), modelviewMatrix.at<float>(1,1), modelviewMatrix.at<float>(1,2),  modelviewMatrix.at<float>(1,3));
+				NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(2,0), modelviewMatrix.at<float>(2,1), modelviewMatrix.at<float>(2,2),  modelviewMatrix.at<float>(2,3));
+				NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(3,0), modelviewMatrix.at<float>(3,1), modelviewMatrix.at<float>(3,2),  modelviewMatrix.at<float>(3,3));
 				return YES;
 			}
 			else {
@@ -381,89 +294,63 @@ using namespace std;
 				return NO;
 			}
 		}			
-	}
-	/*
-	else { // Use SURF
-		// Based on find_obj.cpp in OpenCV samples directory
-		// -------------------------------------------------
-		// 1) Calculate SURF descriptors and put those in a cv::Mat
-		SURF surf;
-		if(!sourceDescriptorsAreFresh || !destDescriptorsAreFresh) {
-			if(!sourceDescriptorsAreFresh) {
-				vector<float> _sourceDescriptors;
-				surf(sourceImage, cv::Mat(), sourceKeyPoints, _sourceDescriptors, true);
-				// Convert descriptor vector to cv::Mat
-				float* a = new float[_sourceDescriptors.size()];	// Array to hold data for matrix conversion
-				copy(_sourceDescriptors.begin(), _sourceDescriptors.end(), a);
-				sourceDescriptors = Mat(sourceKeyPoints.size(), surf.descriptorSize(), CV_32F, a);
-				sourceDescriptorsAreFresh = YES;
-			}
-			if(!destDescriptorsAreFresh) {
-				vector<float> _destDescriptors;
-				surf(*destImage, cv::Mat(), *destKeyPoints, _destDescriptors, true);
-				// Convert descriptor vector to cv::Mat
-				float* a = new float[_destDescriptors.size()];	// Array to hold data for matrix conversion
-				copy(_destDescriptors.begin(), _destDescriptors.end(), a);
-				destDescriptors = Mat(destKeyPoints->size(), surf.descriptorSize(), CV_32F, a);
-
-				destDescriptorsAreFresh = YES;
-			}
-			// 2) Use FLANN to calculate nearest-neighbors
-			cv::Mat m_indices(sourceDescriptors.rows, 2, CV_32S);
-			cv::Mat m_dists(sourceDescriptors.rows, 2, CV_32F);
-			
-			// Build the search space index, sorting descriptors into a kd-tree
-			cv::flann::Index flann_index(destDescriptors, cv::flann::KDTreeIndexParams(4));  // using 4 randomized kdtrees
-			// Perform the nearest-neighbor search
-			flann_index.knnSearch(sourceDescriptors, m_indices, m_dists, 2, cv::flann::SearchParams(64) ); // maximum number of leafs checked
-			
-			
-			// 3) Throw away matches where difference between 1st and 2nd nearest neighbors is too small
-			//		OR the nearest neighbor is further than 0.2 
-			keyPointMatches.clear();
-			int* indices_ptr = m_indices.ptr<int>(0);
-			float* dists_ptr = m_dists.ptr<float>(0);
-			for (int i=0;i<m_indices.rows;++i) {
-				if (dists_ptr[2*i] < 0.4 && dists_ptr[2*i]<0.6*dists_ptr[2*i+1]) {	// If distance to 1st NN is less than .6 the distance to 2nd NN
-					NSLog(@"1st: %f.3  2nd: %f.3", dists_ptr[2*i], dists_ptr[2*i+1]);
-					keyPointMatches.push_back(i);
-					keyPointMatches.push_back(indices_ptr[2*i]);
-				}
-			}
-			NSLog(@"%i good matches (out of %i points)", keyPointMatches.size()/2, sourceKeyPoints.size());
-		}
-		
-		// Need at least 4 pairs of matching points to calculate homography
-		if(keyPointMatches.size() >= 8) {
-			// FINDING THE HOMOGRAPHY NEEDS TO HAPPEN EVERY FRAME
-			// THE ABOVE CAN HAPPEN ONLY WHEN A NEW SET OF POINTS IS SET TO BE TRACKED
-			#pragma todo(Split this into 2 functions)
-			
-			// 4) Convert matched points INDICES to a vector of Point2f COORDINATES
-			vector<Point2f> _sourcePointCoordinates, _destPointCoordinates;
-			for(int i=0; i<keyPointMatches.size(); i+=2) {
-				if(destKeyPoints->size() > keyPointMatches[i+1] && sourceKeyPoints.size() > keyPointMatches[i]) {
-					_sourcePointCoordinates.push_back(sourceKeyPoints.at(keyPointMatches[i]).pt);
-					_destPointCoordinates.push_back(destKeyPoints->at(keyPointMatches[i+1]).pt);
-				}
-			}
-			Mat sourcePointCoordinates(_sourcePointCoordinates);
-			Mat destPointCoordinates(_destPointCoordinates);
-			// 5) Find the homography and set it to matrixData
-			matrix = findHomography(sourcePointCoordinates, destPointCoordinates, CV_RANSAC, 5);
-			return YES;
-		}
-		else {
-			NSLog(@"NOT ENOUGH MATCHES FOUND");
-		}
-		
-		return NO;
-	}
-	*/
-	
+	}	
 	return NO;
 }
 
+
+- (cv::Mat) modelviewFromHomography:(cv::Mat) homography {
+	
+	// Decompose the Homography into translation and rotation vectors
+	// Based on: https://gist.github.com/740979/97f54a63eb5f61f8f2eb578d60eb44839556ff3f
+	
+	NSLog(@"Homography:");
+	NSLog(@"%f\t\t%f\t\t%f", homography.at<double>(0,0), homography.at<double>(0,1), homography.at<double>(0,2));
+	NSLog(@"%f\t\t%f\t\t%f", homography.at<double>(1,0), homography.at<double>(1,1), homography.at<double>(1,2));
+	NSLog(@"%f\t\t%f\t\t%f", homography.at<double>(2,0), homography.at<double>(2,1), homography.at<double>(2,2));
+	
+	Mat inverseCameraMatrix = (Mat_<double>(3,3) << 1/cameraMatrix.at<double>(0,0) , 0 , -cameraMatrix.at<double>(0,2)/cameraMatrix.at<double>(0,0) ,
+							   0 , 1/cameraMatrix.at<double>(1,1) , -cameraMatrix.at<double>(1,2)/cameraMatrix.at<double>(1,1) ,
+							   0 , 0 , 1);
+		
+	Mat G = inverseCameraMatrix * matrix;
+	Mat G1 = (Mat_<double>(3,1) << G.at<double>(0,0) , G.at<double>(1,0) , G.at<double>(2,0));
+	Mat G2 = (Mat_<double>(3,1) << G.at<double>(0,1) , G.at<double>(1,1) , G.at<double>(2,1));
+	Mat G3 = (Mat_<double>(3,1) << G.at<double>(0,2) , G.at<double>(1,2) , G.at<double>(2,2));
+	
+	Mat H1 = (Mat_<double>(3,1) << matrix.at<double>(0,0) , matrix.at<double>(1,0) , matrix.at<double>(2,0));
+	
+	double lambda = sqrt(cv::norm(G1) * cv::norm(G2));
+
+	NSLog(@"G3: %f\t%f\t%f", G.at<double>(2,0), G.at<double>(2,1), G.at<double>(2,2));
+	
+	Mat r1 = (Mat_<double>(3,1) << G1.at<double>(0,0) / lambda, G1.at<double>(1,0) / lambda, G1.at<double>(2,0) / lambda);	// Rotation axis 1
+	Mat r2 = (Mat_<double>(3,1) << G2.at<double>(0,0) / lambda, G2.at<double>(1,0) / lambda, G2.at<double>(2,0) / lambda);	// Rotation axis 2
+	Mat t = (Mat_<double>(3,1) << G3.at<double>(0,0) / lambda / 640, -G3.at<double>(1,0) / lambda / 640, -G3.at<double>(2,0) / lambda / 640);	// Translation vector
+	
+	// Make r1 and r2 orthogonal
+	Mat c = r1 + r2;
+	Mat p = r1.cross(r2);
+	Mat d = c.cross(p);
+	
+	r1 = 1/sqrt(2) * (c / cv::norm(c) + d / cv::norm(d));
+	r2 = 1/sqrt(2) * (c / cv::norm(c) - d / cv::norm(d));
+	Mat r3 = r1.cross(r2);
+	
+	// Make a rotation matrix, convert to rotation vector, flip x-axis rotation, convert back to rotation matrix
+	Mat R = (Mat_<double>(3,3) <<	r1.at<double>(0,0), r1.at<double>(1,0), r1.at<double>(2,0),
+			 r2.at<double>(0,0), r2.at<double>(1,0), r2.at<double>(2,0),
+			 r3.at<double>(0,0), r3.at<double>(1,0), r3.at<double>(2,0));
+	R = R.t();
+	Mat flip_x = (Mat_<double>(3,3) << 1,0,0 , 0,-1,0, 0,0,-1);
+	R = flip_x * R * flip_x;
+		
+	return (Mat_<float>(4,4) <<	R.at<double>(0,0), R.at<double>(0,1), R.at<double>(0,2), t.at<double>(0,0),
+								R.at<double>(1,0), R.at<double>(1,1), R.at<double>(1,2), t.at<double>(1,0),
+								R.at<double>(2,0), R.at<double>(2,1), R.at<double>(2,2), t.at<double>(2,0),
+								0, 0, 0, 1);
+	
+}
 
 - (HomographyEstimate) findHomographyFrom:(cv::Mat&)fromPoints To:(cv::Mat&) toPoints {
 	// Make sure we have valid matrices with enough (4) points
@@ -476,6 +363,19 @@ using namespace std;
 
 	int count = MAX(fromPoints.cols, fromPoints.rows);
 	NSLog(@"Using %i points", count);
+
+	/*
+	for(int i=0; i<fromPoints.rows; i++) {
+		//NSLog(@"%f, %f", fromPoints.at<float>(i,0), fromPoints.at<float>(i,1));
+		//fromPoints.at<float>(i,0) -= 320.;
+		//fromPoints.at<float>(i,1) -= 240.;
+	}
+	for(int i=0; i<toPoints.rows; i++) {
+		//NSLog(@"%f, %f", toPoints.at<float>(i,0), toPoints.at<float>(i,1));
+		//toPoints.at<float>(i,0) -= 320.;
+		//toPoints.at<float>(i,1) -= 240.;
+	}
+	*/
 	
 	// Convert cv::Mat to CvMat
 	CvMat _pt1 = Mat(toPoints), _pt2 = Mat(fromPoints);

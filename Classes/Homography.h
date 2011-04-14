@@ -48,6 +48,7 @@ typedef struct {
 
 - (void) train;
 - (BOOL) calculate;
+- (cv::Mat) modelviewFromHomography:(cv::Mat) homoraphy;
 - (void) loadTrainingData:(NSString *)resourceName;
 - (void) saveTrainingData:(NSString *)resourceName;
 

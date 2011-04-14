@@ -31,24 +31,9 @@
 		
 		m_renderingEngine = new OverlayRenderer();
 		
-		/*
-		GLuint framebuffer, renderbuffer;
-		glGenFramebuffersOES(1, &framebuffer);
-		glGenRenderbuffersOES(1, &renderbuffer);
-		
-		glBindFramebufferOES(GL_FRAMEBUFFER_OES, framebuffer);
-		glBindRenderbufferOES(GL_RENDERBUFFER_OES, renderbuffer);
-		*/
-		
 		[context renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:eaglLayer];
 		
 		m_renderingEngine->Initialize(CGRectGetWidth(frame), CGRectGetHeight(frame));
-		
-		/*
-		glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, renderbuffer);
-		
-		glViewport(0, 0, CGRectGetWidth(frame), CGRectGetHeight(frame));
-		*/
 		
 		[self drawView:nil];
 		m_timestamp = CACurrentMediaTime();

@@ -41,6 +41,7 @@
 		90AE40E312FBBF7600E59A29 /* libopencv_video.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 90AE40D812FBBF7600E59A29 /* libopencv_video.a */; };
 		90AE42DC1300789600E59A29 /* TrackedPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90AE42DB1300789600E59A29 /* TrackedPoint.mm */; };
 		90AE42EC13010F2900E59A29 /* PointTracker.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90AE42EB13010F2900E59A29 /* PointTracker.mm */; };
+		90C3683D13558BBF00DB5EB6 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -92,6 +93,7 @@
 		90AE42DB1300789600E59A29 /* TrackedPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TrackedPoint.mm; sourceTree = "<group>"; };
 		90AE42EA13010F2900E59A29 /* PointTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PointTracker.h; sourceTree = "<group>"; };
 		90AE42EB13010F2900E59A29 /* PointTracker.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PointTracker.mm; sourceTree = "<group>"; };
+		90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +122,7 @@
 				908CEC821314CCA1001447D7 /* libopencv_calib3d.a in Frameworks */,
 				9033CFEB134C1B1900CDE126 /* OpenGLES.framework in Frameworks */,
 				9033CFEF134C1B2600CDE126 /* QuartzCore.framework in Frameworks */,
+				90C3683D13558BBF00DB5EB6 /* CoreMotion.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -193,6 +196,7 @@
 				90323E2612DC2425004C991C /* CoreVideo.framework */,
 				9033CFEA134C1B1900CDE126 /* OpenGLES.framework */,
 				9033CFEE134C1B2600CDE126 /* QuartzCore.framework */,
+				90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
