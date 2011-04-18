@@ -42,6 +42,7 @@
 		90AE42DC1300789600E59A29 /* TrackedPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90AE42DB1300789600E59A29 /* TrackedPoint.mm */; };
 		90AE42EC13010F2900E59A29 /* PointTracker.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90AE42EB13010F2900E59A29 /* PointTracker.mm */; };
 		90C3683D13558BBF00DB5EB6 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */; };
+		90C36A57135CD12900DB5EB6 /* PoseFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 90C36A56135CD12900DB5EB6 /* PoseFilter.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -94,6 +95,8 @@
 		90AE42EA13010F2900E59A29 /* PointTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PointTracker.h; sourceTree = "<group>"; };
 		90AE42EB13010F2900E59A29 /* PointTracker.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PointTracker.mm; sourceTree = "<group>"; };
 		90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
+		90C36A55135CD12900DB5EB6 /* PoseFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PoseFilter.h; sourceTree = "<group>"; };
+		90C36A56135CD12900DB5EB6 /* PoseFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PoseFilter.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +135,7 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				90C36A58135CD12C00DB5EB6 /* Sensor Fusion */,
 				9033D423134FE7BC00CDE126 /* Deprecated */,
 				9033CFF2134C1B9500CDE126 /* Rendering */,
 				9033D424134FE7CF00CDE126 /* Vision */,
@@ -275,6 +279,15 @@
 			name = Tracking;
 			sourceTree = "<group>";
 		};
+		90C36A58135CD12C00DB5EB6 /* Sensor Fusion */ = {
+			isa = PBXGroup;
+			children = (
+				90C36A55135CD12900DB5EB6 /* PoseFilter.h */,
+				90C36A56135CD12900DB5EB6 /* PoseFilter.cpp */,
+			);
+			name = "Sensor Fusion";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -347,6 +360,7 @@
 				908CEC0013148C10001447D7 /* Homography.mm in Sources */,
 				9033CFF5134C1BB000CDE126 /* GLView.mm in Sources */,
 				9033D002134C346C00CDE126 /* OverlayRenderer.cpp in Sources */,
+				90C36A57135CD12900DB5EB6 /* PoseFilter.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

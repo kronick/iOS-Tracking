@@ -59,6 +59,14 @@
 	
 	// Core motion sensors
 	CMMotionManager *motionManager;
+	
+	// Kalman filter stuff
+	cv::KalmanFilter poseFilter;
+	cv::Mat poseOldTranslation;
+	NSTimeInterval lastVisionEstimateTime;
+	BOOL poseInitialized;
+	CMAttitude *referenceAttitude;
+	cv::Mat referenceRotationMatrix;
 }
 
 @property (nonatomic,retain) PointTracker *pointTracker;
@@ -66,6 +74,7 @@
 @property (nonatomic,retain) GLView *glView;
 @property (nonatomic,retain) IBOutlet UIView *statusView;
 @property (nonatomic,retain) CMMotionManager *motionManager;
+@property (nonatomic,retain) CMAttitude *referenceAttitude;
 
 - (void)redrawKeyPoints:(NSTimer *)timer;
 
@@ -74,6 +83,8 @@
 - (IBAction)findReferenceImage;
 - (IBAction)track;
 - (void)updateMatch:(NSTimer*)theTimer;
+
+- (void)updateSensorPose:(NSTimer*)theTimer;
 
 - (void) setMilestone;
 

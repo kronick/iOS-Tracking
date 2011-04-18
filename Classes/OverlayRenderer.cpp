@@ -102,7 +102,7 @@ void OverlayRenderer::Render()  {
 	for(int i=0; i<16; i++)	{	// Rotation
 		dist = m_modelviewMatrix_target[i] - m_modelviewMatrix[i];
 		m_modelviewMatrix[i] += 1 * dist * dist * (dist > 0 ? 1 : -1);
-		//m_modelviewMatrix[i] = m_modelviewMatrix_target[i];
+		m_modelviewMatrix[i] = m_modelviewMatrix_target[i];
 	}
 	/*
 	for(int i=12; i<16; i++)	// Translation
