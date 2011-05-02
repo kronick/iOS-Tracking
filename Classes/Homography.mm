@@ -164,8 +164,8 @@ using namespace std;
 - (void) train {
 	trained = NO;
 	NSLog(@"Need to train to source image...");
-	//scale  z-rotation       tilt
-	PatchGenerator patchGen(0,256,5,true,0.05,1.0,-CV_PI/6,CV_PI/6,-CV_PI/2,CV_PI/2);
+	// backgroundMin, backgroundMax, noiseRange, randomBlur, scaleMin, scaleMax, z-rotation min, z-rotation max, tilt min, tilt max
+	PatchGenerator patchGen(0,256,5,true,0.2,1.5,-CV_PI/4,CV_PI/4,-CV_PI/2,CV_PI/2);
 	fern.setVerbose(true);
 	//for(int i=0; i<sourceKeyPoints.size(); i++) 
 	//	NSLog(@"%f , %f", sourceKeyPoints[i].pt.x, sourceKeyPoints[i].pt.y);
@@ -195,11 +195,11 @@ using namespace std;
 			modelviewMatrix = [self modelviewFromHomography:matrix];
 			
 			
-			NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(0,0), modelviewMatrix.at<float>(0,1), modelviewMatrix.at<float>(0,2),  modelviewMatrix.at<float>(0,3));
-			NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(1,0), modelviewMatrix.at<float>(1,1), modelviewMatrix.at<float>(1,2),  modelviewMatrix.at<float>(1,3));
-			NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(2,0), modelviewMatrix.at<float>(2,1), modelviewMatrix.at<float>(2,2),  modelviewMatrix.at<float>(2,3));
-			NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(3,0), modelviewMatrix.at<float>(3,1), modelviewMatrix.at<float>(3,2),  modelviewMatrix.at<float>(3,3));
-			return YES;
+			//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(0,0), modelviewMatrix.at<float>(0,1), modelviewMatrix.at<float>(0,2),  modelviewMatrix.at<float>(0,3));
+			//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(1,0), modelviewMatrix.at<float>(1,1), modelviewMatrix.at<float>(1,2),  modelviewMatrix.at<float>(1,3));
+			//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(2,0), modelviewMatrix.at<float>(2,1), modelviewMatrix.at<float>(2,2),  modelviewMatrix.at<float>(2,3));
+			//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(3,0), modelviewMatrix.at<float>(3,1), modelviewMatrix.at<float>(3,2),  modelviewMatrix.at<float>(3,3));
+			return NO;
 		}
 		else {
 			// Below is modified from planardetect.cpp OpenCV sample
@@ -264,7 +264,7 @@ using namespace std;
 			}
 			
 			//NSLog(@"Found %i points with average log prob %f", (int)fromPt.size(), sumLogProb/(float)fromPt.size());
-			if( fromPt.size() >= 20 ) {
+			if( fromPt.size() >= 30 ) {
 				vector<uchar> mask;
 			
 				//matrix = findHomography(Mat(fromPt), Mat(toPt), mask, RANSAC, 2);
@@ -274,19 +274,19 @@ using namespace std;
 				matrix = estimate.homography;
 				
 				
-				if(matrix.data ==0 || estimate.inliers < 10) {
-					NSLog(@"Did not detect object.");
+				if(matrix.data ==0 || estimate.inliers < 15) {
+					//NSLog(@"Did not detect object.");
 					return NO;
 				}
 				
-				NSLog(@"Successfully found homography!");					
+				//NSLog(@"Successfully found homography!");					
 				
 				modelviewMatrix = [self modelviewFromHomography:matrix];
 				
-				NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(0,0), modelviewMatrix.at<float>(0,1), modelviewMatrix.at<float>(0,2),  modelviewMatrix.at<float>(0,3));
-				NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(1,0), modelviewMatrix.at<float>(1,1), modelviewMatrix.at<float>(1,2),  modelviewMatrix.at<float>(1,3));
-				NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(2,0), modelviewMatrix.at<float>(2,1), modelviewMatrix.at<float>(2,2),  modelviewMatrix.at<float>(2,3));
-				NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(3,0), modelviewMatrix.at<float>(3,1), modelviewMatrix.at<float>(3,2),  modelviewMatrix.at<float>(3,3));
+				//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(0,0), modelviewMatrix.at<float>(0,1), modelviewMatrix.at<float>(0,2),  modelviewMatrix.at<float>(0,3));
+				//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(1,0), modelviewMatrix.at<float>(1,1), modelviewMatrix.at<float>(1,2),  modelviewMatrix.at<float>(1,3));
+				//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(2,0), modelviewMatrix.at<float>(2,1), modelviewMatrix.at<float>(2,2),  modelviewMatrix.at<float>(2,3));
+				//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(3,0), modelviewMatrix.at<float>(3,1), modelviewMatrix.at<float>(3,2),  modelviewMatrix.at<float>(3,3));
 				return YES;
 			}
 			else {
@@ -303,12 +303,7 @@ using namespace std;
 	
 	// Decompose the Homography into translation and rotation vectors
 	// Based on: https://gist.github.com/740979/97f54a63eb5f61f8f2eb578d60eb44839556ff3f
-	
-	NSLog(@"Homography:");
-	NSLog(@"%f\t\t%f\t\t%f", homography.at<double>(0,0), homography.at<double>(0,1), homography.at<double>(0,2));
-	NSLog(@"%f\t\t%f\t\t%f", homography.at<double>(1,0), homography.at<double>(1,1), homography.at<double>(1,2));
-	NSLog(@"%f\t\t%f\t\t%f", homography.at<double>(2,0), homography.at<double>(2,1), homography.at<double>(2,2));
-	
+		
 	Mat inverseCameraMatrix = (Mat_<double>(3,3) << 1/cameraMatrix.at<double>(0,0) , 0 , -cameraMatrix.at<double>(0,2)/cameraMatrix.at<double>(0,0) ,
 							   0 , 1/cameraMatrix.at<double>(1,1) , -cameraMatrix.at<double>(1,2)/cameraMatrix.at<double>(1,1) ,
 							   0 , 0 , 1);
@@ -322,7 +317,7 @@ using namespace std;
 	
 	double lambda = sqrt(cv::norm(G1) * cv::norm(G2));
 
-	NSLog(@"G3: %f\t%f\t%f", G.at<double>(2,0), G.at<double>(2,1), G.at<double>(2,2));
+	//NSLog(@"G3: %f\t%f\t%f", G.at<double>(2,0), G.at<double>(2,1), G.at<double>(2,2));
 	
 	Mat r1 = (Mat_<double>(3,1) << G1.at<double>(0,0) / lambda, G1.at<double>(1,0) / lambda, G1.at<double>(2,0) / lambda);	// Rotation axis 1
 	Mat r2 = (Mat_<double>(3,1) << G2.at<double>(0,0) / lambda, G2.at<double>(1,0) / lambda, G2.at<double>(2,0) / lambda);	// Rotation axis 2
@@ -362,7 +357,7 @@ using namespace std;
                toPoints.cols*toPoints.channels() == 2));
 
 	int count = MAX(fromPoints.cols, fromPoints.rows);
-	NSLog(@"Using %i points", count);
+	//NSLog(@"Using %i points", count);
 
 	/*
 	for(int i=0; i<fromPoints.rows; i++) {

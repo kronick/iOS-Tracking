@@ -60,13 +60,17 @@ void OverlayRenderer::Render()  {
 	}
 	*/
 	
-	
-	glColor4f(1, 1, 1, 1);
-	for(int i=0; i<4; i++) {
-		DrawLine(foundCorners[0].y, foundCorners[0].x, foundCorners[1].y, foundCorners[1].x);
-		DrawLine(foundCorners[1].y, foundCorners[1].x, foundCorners[2].y, foundCorners[2].x);
-		DrawLine(foundCorners[2].y, foundCorners[2].x, foundCorners[3].y, foundCorners[3].x);
-		DrawLine(foundCorners[3].y, foundCorners[3].x, foundCorners[0].y, foundCorners[0].x);
+	if(m_drawOverlay) {
+		glColor4f(1, 1, 1, 1);
+		for(int i=0; i<4; i++) {
+			DrawLine(foundCorners[0].y, foundCorners[0].x, foundCorners[1].y, foundCorners[1].x);
+			DrawLine(foundCorners[1].y, foundCorners[1].x, foundCorners[2].y, foundCorners[2].x);
+			DrawLine(foundCorners[2].y, foundCorners[2].x, foundCorners[3].y, foundCorners[3].x);
+			DrawLine(foundCorners[3].y, foundCorners[3].x, foundCorners[0].y, foundCorners[0].x);
+
+			DrawLine(foundCorners[3].y, foundCorners[3].x, foundCorners[1].y, foundCorners[1].x);
+			DrawLine(foundCorners[2].y, foundCorners[2].x, foundCorners[0].y, foundCorners[0].x);
+		}
 	}
 	
 	glPopMatrix();
@@ -117,7 +121,7 @@ void OverlayRenderer::Render()  {
 	//glTranslatef(0.5, -240./640., 0);
 	//glTranslatef(-0.5, 0.5*screen_width/screen_height, 0);
 	//glTranslatef(0, -1*screen_width/screen_height, 0);
-	glRotatef(90, 0, 0, 1);
+	glRotatef(-90, 0, 0, 1);
 	
 	if(!m_drawOverlay) {
 		m_overlayFade--;
@@ -128,7 +132,7 @@ void OverlayRenderer::Render()  {
 		if(m_overlayFade > OVERLAY_FADE_TIME) m_overlayFade = OVERLAY_FADE_TIME;
 	}
 	
-	if(true || m_overlayFade > 0) {
+	if(true ||  m_overlayFade > 0) {
 		//glLoadIdentity();
 		//glRotatef(-90, 0, 0, 1);
 		//glTranslatef(0, 0, -2);
@@ -140,7 +144,7 @@ void OverlayRenderer::Render()  {
 		
 		//glTranslatef(0, 0, -2);
 		glColor4f(0.5*alpha, 0.5*alpha, 0.5*alpha, alpha*0.5);
-		//DrawRect(.125*2, .125*3, .25*2, .25*3);
+		DrawRect(.125*2, .125*3, .25*2, .25*3);
 		for(int i=-50; i<=50; i++) {
 			DrawLine(.05*i,2.5,0, .05*i,-2.5,0);
 			DrawLine(-2.5,.05*i,0, 2.5,.05*i,0);

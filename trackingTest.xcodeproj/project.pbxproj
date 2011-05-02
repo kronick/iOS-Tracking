@@ -15,6 +15,12 @@
 		2899E5220DE3E06400AC0155 /* trackingTestViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2899E5210DE3E06400AC0155 /* trackingTestViewController.xib */; };
 		28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 28AD733E0D9D9553002E5188 /* MainWindow.xib */; };
 		28D7ACF80DDB3853001CB0EB /* trackingTestViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 28D7ACF70DDB3853001CB0EB /* trackingTestViewController.mm */; };
+		902D7C8C136BC70F002BB79B /* ImageTaggerViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 902D7C8A136BC70F002BB79B /* ImageTaggerViewController.mm */; };
+		902D7C8D136BC70F002BB79B /* ImageTaggerViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 902D7C8B136BC70F002BB79B /* ImageTaggerViewController.xib */; };
+		902D7CDE136BDD1C002BB79B /* MainWindow~ipad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 902D7CDD136BDD1C002BB79B /* MainWindow~ipad.xib */; };
+		902D7CE1136BDD77002BB79B /* trackingTestViewController~ipad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 902D7CE0136BDD77002BB79B /* trackingTestViewController~ipad.xib */; };
+		902D7CED136BDDED002BB79B /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 902D7CEC136BDDED002BB79B /* CoreLocation.framework */; };
+		902D7CEF136BDDED002BB79B /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 902D7CEE136BDDED002BB79B /* MapKit.framework */; };
 		90323D2F12DC02FB004C991C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90323D2E12DC02FB004C991C /* Accelerate.framework */; };
 		90323D4D12DC04F7004C991C /* UIImage+cvConversions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90323D4C12DC04F7004C991C /* UIImage+cvConversions.mm */; };
 		90323D6112DC078C004C991C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90323D6012DC078C004C991C /* AVFoundation.framework */; };
@@ -41,6 +47,7 @@
 		90AE40E312FBBF7600E59A29 /* libopencv_video.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 90AE40D812FBBF7600E59A29 /* libopencv_video.a */; };
 		90AE42DC1300789600E59A29 /* TrackedPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90AE42DB1300789600E59A29 /* TrackedPoint.mm */; };
 		90AE42EC13010F2900E59A29 /* PointTracker.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90AE42EB13010F2900E59A29 /* PointTracker.mm */; };
+		90BC5136136D4A1900D0B9E0 /* magentaDot.png in Resources */ = {isa = PBXBuildFile; fileRef = 90BC5135136D4A1900D0B9E0 /* magentaDot.png */; };
 		90C3683D13558BBF00DB5EB6 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */; };
 		90C36A57135CD12900DB5EB6 /* PoseFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 90C36A56135CD12900DB5EB6 /* PoseFilter.cpp */; };
 /* End PBXBuildFile section */
@@ -59,6 +66,13 @@
 		29B97316FDCFA39411CA2CEA /* main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		32CA4F630368D1EE00C91783 /* trackingTest_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = trackingTest_Prefix.pch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* trackingTest-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "trackingTest-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
+		902D7C89136BC70F002BB79B /* ImageTaggerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageTaggerViewController.h; sourceTree = "<group>"; };
+		902D7C8A136BC70F002BB79B /* ImageTaggerViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ImageTaggerViewController.mm; sourceTree = "<group>"; };
+		902D7C8B136BC70F002BB79B /* ImageTaggerViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ImageTaggerViewController.xib; path = Classes/ImageTaggerViewController.xib; sourceTree = "<group>"; };
+		902D7CDD136BDD1C002BB79B /* MainWindow~ipad.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = "MainWindow~ipad.xib"; sourceTree = "<group>"; };
+		902D7CE0136BDD77002BB79B /* trackingTestViewController~ipad.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = "trackingTestViewController~ipad.xib"; sourceTree = "<group>"; };
+		902D7CEC136BDDED002BB79B /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		902D7CEE136BDDED002BB79B /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		90323D2E12DC02FB004C991C /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		90323D4B12DC04F7004C991C /* UIImage+cvConversions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+cvConversions.h"; sourceTree = "<group>"; };
 		90323D4C12DC04F7004C991C /* UIImage+cvConversions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "UIImage+cvConversions.mm"; sourceTree = "<group>"; };
@@ -94,6 +108,7 @@
 		90AE42DB1300789600E59A29 /* TrackedPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TrackedPoint.mm; sourceTree = "<group>"; };
 		90AE42EA13010F2900E59A29 /* PointTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PointTracker.h; sourceTree = "<group>"; };
 		90AE42EB13010F2900E59A29 /* PointTracker.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PointTracker.mm; sourceTree = "<group>"; };
+		90BC5135136D4A1900D0B9E0 /* magentaDot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = magentaDot.png; sourceTree = "<group>"; };
 		90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		90C36A55135CD12900DB5EB6 /* PoseFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PoseFilter.h; sourceTree = "<group>"; };
 		90C36A56135CD12900DB5EB6 /* PoseFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PoseFilter.cpp; sourceTree = "<group>"; };
@@ -126,6 +141,8 @@
 				9033CFEB134C1B1900CDE126 /* OpenGLES.framework in Frameworks */,
 				9033CFEF134C1B2600CDE126 /* QuartzCore.framework in Frameworks */,
 				90C3683D13558BBF00DB5EB6 /* CoreMotion.framework in Frameworks */,
+				902D7CED136BDDED002BB79B /* CoreLocation.framework in Frameworks */,
+				902D7CEF136BDDED002BB79B /* MapKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,6 +175,7 @@
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
+				902D7CA4136BC722002BB79B /* UI */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				90323D4A12DC04CF004C991C /* Utilities */,
@@ -165,6 +183,8 @@
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
+				902D7CDD136BDD1C002BB79B /* MainWindow~ipad.xib */,
+				902D7CE0136BDD77002BB79B /* trackingTestViewController~ipad.xib */,
 			);
 			name = CustomTemplate;
 			sourceTree = "<group>";
@@ -181,6 +201,8 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				90BC5135136D4A1900D0B9E0 /* magentaDot.png */,
+				902D7C8B136BC70F002BB79B /* ImageTaggerViewController.xib */,
 				2899E5210DE3E06400AC0155 /* trackingTestViewController.xib */,
 				28AD733E0D9D9553002E5188 /* MainWindow.xib */,
 				8D1107310486CEB800E47090 /* trackingTest-Info.plist */,
@@ -201,8 +223,20 @@
 				9033CFEA134C1B1900CDE126 /* OpenGLES.framework */,
 				9033CFEE134C1B2600CDE126 /* QuartzCore.framework */,
 				90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */,
+				902D7CEC136BDDED002BB79B /* CoreLocation.framework */,
+				902D7CEE136BDDED002BB79B /* MapKit.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		902D7CA4136BC722002BB79B /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				902D7C89136BC70F002BB79B /* ImageTaggerViewController.h */,
+				902D7C8A136BC70F002BB79B /* ImageTaggerViewController.mm */,
+			);
+			name = UI;
+			path = Classes;
 			sourceTree = "<group>";
 		};
 		90323D2912DC02AF004C991C /* Libraries */ = {
@@ -339,6 +373,10 @@
 			files = (
 				28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */,
 				2899E5220DE3E06400AC0155 /* trackingTestViewController.xib in Resources */,
+				902D7C8D136BC70F002BB79B /* ImageTaggerViewController.xib in Resources */,
+				902D7CDE136BDD1C002BB79B /* MainWindow~ipad.xib in Resources */,
+				902D7CE1136BDD77002BB79B /* trackingTestViewController~ipad.xib in Resources */,
+				90BC5136136D4A1900D0B9E0 /* magentaDot.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -361,6 +399,7 @@
 				9033CFF5134C1BB000CDE126 /* GLView.mm in Sources */,
 				9033D002134C346C00CDE126 /* OverlayRenderer.cpp in Sources */,
 				90C36A57135CD12900DB5EB6 /* PoseFilter.cpp in Sources */,
+				902D7C8C136BC70F002BB79B /* ImageTaggerViewController.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

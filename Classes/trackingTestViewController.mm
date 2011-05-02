@@ -18,24 +18,11 @@ using namespace cv;
 @synthesize pointTracker, objectFinder;
 @synthesize glView, statusView;
 @synthesize motionManager, referenceAttitude;
+@synthesize visionTrackingSwitch, gyroTrackingSwitch;
+@synthesize framerateLabel, foundPointsLabel;
+@synthesize imageTaggerView;
 
-/*
-// The designated initializer. Override to perform setup that is required before the view is loaded.
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
-*/
-
-
-// Implement loadView to create a view hierarchy programmatically, without using a nib.
-//- (void)loadView {
-//}
-
-// Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
+#pragma mark Lifecycle
 - (void)viewDidLoad {
     [super viewDidLoad];
 		NSLog(@"Loading view.");
@@ -48,7 +35,7 @@ using namespace cv;
 	FASTThreshold = 30;
 	frameCount = 0;
 	setNewMilestone = NO;
-	keyPointTarget = 200;
+	keyPointTarget = 100;
 	
 	self.objectFinder = [[[Homography alloc] init] autorelease];
 	
@@ -56,26 +43,7 @@ using namespace cv;
 	// Set up the kalman pose filter
 	// -----------------------------
 	// TODO: Convert this to quaternions
-	poseFilter = cv::KalmanFilter(15, 15);	// 15 state parameters, 15 measurement parameters
-											// (State is linear position [3], linear velocity [3], rotation matrix [9])
-	poseFilter.processNoiseCov = Mat::eye(15,15, CV_32F) * 0.00001;
-	poseFilter.measurementMatrix = Mat::eye(15,15, CV_32F);	// Measurement = I * State
-	
-	// Make the state transition matrix
-	float linearDamping = 0.5f;	// Percent of linear velocity that survives each iteration-- no new measurements means velocity->0 over time
-	poseFilter.transitionMatrix = Mat::eye(15,15, CV_32F);	// Start with an identity matrix
-	poseFilter.transitionMatrix.at<float>(3,3) = linearDamping;			// Set damping on velocity
-	poseFilter.transitionMatrix.at<float>(4,4) = linearDamping;			//			"
-	poseFilter.transitionMatrix.at<float>(5,5) = linearDamping;			//			"
-	poseFilter.transitionMatrix.at<float>(0,3) = 0;						// Linear position = position + (1 * velocity)
-	poseFilter.transitionMatrix.at<float>(1,4) = 0;						//						"
-	poseFilter.transitionMatrix.at<float>(2,5) = 0;						//						"
-	
-	poseFilter.measurementNoiseCov = Mat::eye(15,15, CV_32F) * 0.0001;	// This should change with each kind of measurement (sensors vs camera)
-	
-	poseFilter.errorCovPre = Mat::eye(15,15,CV_32F);		// Initialize the error covariances with an identity matrix
-	
-	poseOldTranslation = Mat::zeros(3,1, CV_32F);
+	poseFilter = PoseFilter();	// Use defaults
 	poseInitialized = NO;
 	
 	[NSTimer scheduledTimerWithTimeInterval:1/60. target:self selector:@selector(updateSensorPose:) userInfo:nil repeats:YES];
@@ -101,6 +69,8 @@ using namespace cv;
 	
 	self.captureVideoOutput.minFrameDuration = CMTimeMake(1, 25);
 	[NSTimer scheduledTimerWithTimeInterval:1/25. target:self selector:@selector(redrawKeyPoints:) userInfo:nil repeats:YES];
+	visionTrackingOn = YES;
+	visionTargetFound = NO;
 	
 	AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
 	AVCaptureDeviceInput *captureInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:nil];
@@ -137,6 +107,7 @@ using namespace cv;
 	
 	motionManager.deviceMotionUpdateInterval = 0.01;
 	[motionManager startDeviceMotionUpdates];
+	gyroTrackingOn = YES;
 	
 	NSLog(@"View Did Load");
 }
@@ -154,6 +125,13 @@ using namespace cv;
 	// e.g. self.myOutlet = nil;
 	[self.captureSession release];
 	[self.captureVideoOutput release];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+	[self resumeCaptureSession];
+}
+- (void)viewWillDisappear:(BOOL)animated {
+	[self pauseCaptureSession];
 }
 
 
@@ -197,7 +175,8 @@ using namespace cv;
 	}
 	
 
-	[self findReferenceImage];
+	if(visionTrackingOn)
+		[self findReferenceImage];
 	
 	frameCount++;
 	
@@ -207,12 +186,38 @@ using namespace cv;
 	NSDate *d = [NSDate date];
 	double frameRate = 1 / ([d timeIntervalSinceReferenceDate] - lastTime);
 	lastTime = [d timeIntervalSinceReferenceDate];
-	NSLog(@"FPS: %f with %i keypoints", frameRate, mDetectedKeyPoints.size());
+	//NSLog(@"FPS: %f with %i keypoints", frameRate, mDetectedKeyPoints.size());
+	[framerateLabel performSelectorOnMainThread:@selector(setText:) withObject:[NSString stringWithFormat:@"%3.1f FPS", frameRate] waitUntilDone:YES];
+	[foundPointsLabel performSelectorOnMainThread:@selector(setText:) withObject:[NSString stringWithFormat:@"%i points", mDetectedKeyPoints.size()] waitUntilDone:YES];
+	[framerateLabel.superview setNeedsLayout];
+	[foundPointsLabel.superview setNeedsDisplay];
 }
 
+- (void)pauseCaptureSession {
+	[self.captureSession stopRunning];
+}
+
+- (void)resumeCaptureSession {
+	[self.captureSession startRunning];
+}
 
 #pragma mark -
 #pragma mark IBActions
+
+- (IBAction) visionSwitchChanged {	
+	visionTrackingOn = self.visionTrackingSwitch.on;	
+}
+- (IBAction) gyroSwitchChanged {	
+	gyroTrackingOn = self.gyroTrackingSwitch.on;	
+}
+
+- (IBAction) launchImageTagger {
+	//[self pauseCaptureSession];
+	if(self.imageTaggerView == nil)
+		self.imageTaggerView = [[[ImageTaggerViewController alloc] initWithNibName:@"ImageTaggerViewController" bundle:nil] autorelease];
+	
+	[self presentModalViewController:self.imageTaggerView animated:YES];
+}
 
 - (IBAction) setReferenceImage {
 	NSLog(@"Finding matches...");
@@ -225,7 +230,7 @@ using namespace cv;
 	[objectFinder setSourceKeyPoints:&mMilestoneKeyPoints];
 	[objectFinder train];
 	[objectFinder saveTrainingData:@"someshit.yaml.gz"];
-	keyPointTarget = 300;
+	keyPointTarget = 200;
 	[self.statusView setBackgroundColor:[UIColor greenColor]];
 }
 - (IBAction) loadReference {
@@ -233,10 +238,11 @@ using namespace cv;
 	[self.statusView setBackgroundColor:[UIColor yellowColor]];
 	[objectFinder loadTrainingData:@"someshit.yaml.gz"];
 	[self.statusView setBackgroundColor:[UIColor greenColor]];
-	keyPointTarget = 300;
+	keyPointTarget = 200;
 }
 - (IBAction) findReferenceImage {
-	if([objectFinder isTrained]) {	// && [objectFinder sourceKeyPoints].size() > 0
+	//visionTargetFound = NO;
+	if([objectFinder isTrained] || true) {	// && [objectFinder sourceKeyPoints].size() > 0
 		vector<KeyPoint> destKeys = mDetectedKeyPoints;
 		[objectFinder setDestImage:&mCapturedImage];
 		[objectFinder setDestKeyPoints:&destKeys];
@@ -272,107 +278,62 @@ using namespace cv;
 		}
 		
 		if(success) {
+			visionTargetFound = YES;
 			Mat M = [objectFinder getModelviewMatrix];
 			M = M.inv();			// Invert to get camera pose relative to found marker (*)
-			if(!poseInitialized) {
-				poseFilter.statePost = (Mat_<float>(15,1) <<	M.at<float>(0,3), M.at<float>(1,3), M.at<float>(2,3), 0,0,0,
-																M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),
-																M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),
-																M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2));
-				
-				poseOldTranslation = (Mat_<float>(3,1) << M.at<float>(0,3), M.at<float>(1,3), M.at<float>(2,3));
-				
-				NSDate *d = [NSDate date];
-				lastVisionEstimateTime = [d timeIntervalSinceReferenceDate];
-				
-				self.referenceAttitude = motionManager.deviceMotion.attitude;
-				referenceRotationMatrix = (Mat_<float>(3,3) << M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),
-										   M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),
-										   M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2));
-				
-				poseInitialized = YES;
+			if(!poseInitialized || true) {
+				if(motionManager.deviceMotion != nil) {
+					self.referenceAttitude = motionManager.deviceMotion.attitude;
+					
+					referenceAttitudeMatrixTarget = (Mat_<float>(3,3) <<	referenceAttitude.rotationMatrix.m11, referenceAttitude.rotationMatrix.m12, referenceAttitude.rotationMatrix.m13, 
+																	referenceAttitude.rotationMatrix.m21, referenceAttitude.rotationMatrix.m22, referenceAttitude.rotationMatrix.m23, 
+																	referenceAttitude.rotationMatrix.m31, referenceAttitude.rotationMatrix.m32, referenceAttitude.rotationMatrix.m33);
+					referenceRotationMatrixTarget = (Mat_<float>(3,3) << M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),
+													 M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),
+													 M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2));
+					if(!poseInitialized) {
+						referenceRotationMatrix = referenceRotationMatrixTarget;
+						referenceAttitudeMatrix = referenceAttitudeMatrixTarget;
+					}
+						
+					poseInitialized = YES;
+				}
 			}
 			
-			// Calculate linear velocity
-			NSDate *d = [NSDate date];
-			float dT = (float)([d timeIntervalSinceReferenceDate] - lastVisionEstimateTime);
-			dT = 10;
-			Mat poseTranslationChange = (Mat_<float>(3,1) <<	(M.at<float>(0,3) - poseOldTranslation.at<float>(0,3)) / dT,
-																(M.at<float>(1,3) - poseOldTranslation.at<float>(1,3)) / dT,
-																(M.at<float>(2,3) - poseOldTranslation.at<float>(2,3)) / dT);
-			
-			lastVisionEstimateTime += dT;
-			poseOldTranslation = (Mat_<float>(3,1) << M.at<float>(0,3), M.at<float>(1,3), M.at<float>(2,3));
-			
-			
-			NSLog(@"dT = %f", dT);
-			NSLog(@"Linear velocity: %f\t\t%f\t\t%f", poseTranslationChange.at<float>(0,0), poseTranslationChange.at<float>(1,0), poseTranslationChange.at<float>(2,0));
-			
-			// Set the time step since the last update
-			poseFilter.transitionMatrix.at<float>(0,3) = 0;
-			poseFilter.transitionMatrix.at<float>(1,4) = 0;
-			poseFilter.transitionMatrix.at<float>(2,5) = 0;
-			
-			
-			poseFilter.predict();
-			poseFilter.correct((Mat_<float>(15,1) <<	M.at<float>(0,3), M.at<float>(1,3), M.at<float>(2,3),
-														//poseTranslationChange.at<float>(0,0), poseTranslationChange.at<float>(1,0), poseTranslationChange.at<float>(2,0),
-														0,0,0,
+			visionEstimate = M;
+			/*
+			poseFilter.Predict([NSDate timeIntervalSinceReferenceDate]);
+			Mat poseEstimate = poseFilter.Correct((Mat_<float>(12,1) <<	M.at<float>(0,3), M.at<float>(1,3), M.at<float>(2,3),
 														M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),
 														M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),
-														M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2)));
+														M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2)),
+												  CAMERA_POSE, [NSDate timeIntervalSinceReferenceDate]);
 
-			// Recreate a transformation matrix from the Kalman filter state estimate
-			Mat poseEstimate = poseFilter.measurementMatrix * poseFilter.statePost;
-			
-			NSLog(@"%f\t\t%f\t\t%f", poseFilter.statePost.at<float>(3,0), poseFilter.statePost.at<float>(4,0), poseFilter.statePost.at<float>(5,0));
 			for(int i=0; i<poseEstimate.rows; i++) {
 				if(i < 3)		M.at<float>(i,3) = poseEstimate.at<float>(i,0);					// Translation components
 				else if(i>5)	M.at<float>((int)i/3 - 2, i%3) = poseEstimate.at<float>(i,0);	// Rotation components
 			}
 			
 			M = M.inv();			// Back to the marker's pose, reversing (*)
-							   
+			*/
+			/*
+			NSLog(@"Fused transformation matrix:");
+			NSLog(@"%f\t%f\t%f\t%f", M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),  M.at<float>(0,3));
+			NSLog(@"%f\t%f\t%f\t%f", M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),  M.at<float>(1,3));
+			NSLog(@"%f\t%f\t%f\t%f", M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2),  M.at<float>(2,3));
+			NSLog(@"%f\t%f\t%f\t%f", M.at<float>(3,0), M.at<float>(3,1), M.at<float>(3,2),  M.at<float>(3,3));
+			*/
+			
 			[self.glView setFoundCorners:corners];
 			//[self.glView setmodelviewMatrix:M];
+			 
+		}
+		else {
+			visionTargetFound = NO;
 		}
 		[self.glView setDetected:success];
 	}
-	else {
-		// Respond to CMDeviceMotion data
-		CMRotationMatrix deviceR = motionManager.deviceMotion.attitude.rotationMatrix;
-		cv::Mat rotationMatrix = (Mat_<float>(3,3) <<	deviceR.m11 , deviceR.m21, deviceR.m31,
-														deviceR.m12 , deviceR.m22, deviceR.m32,
-														deviceR.m13 , deviceR.m23, deviceR.m33);
 
-		cv::Mat rotate90 = (Mat_<float>(3,3) << 0,1,0,
-												1,0,0,
-												0,0,1);
-		
-		cv::Mat flipX = (Mat_<float>(3,3) <<	-1,0,0,
-												0,1,0,
-												0,0,-1);
-		
-		rotationMatrix = rotationMatrix.t();
-		rotationMatrix = flipX * rotationMatrix * flipX;
-		rotationMatrix = rotate90 * rotationMatrix;
-		rotationMatrix = rotationMatrix.t();
-		
-		cv::Mat deviceMatrix = (Mat_<float>(4,4) << rotationMatrix.at<float>(0,0) , rotationMatrix.at<float>(0,1) , rotationMatrix.at<float>(0,2) , 0,
-													rotationMatrix.at<float>(1,0) , rotationMatrix.at<float>(1,1) , rotationMatrix.at<float>(1,2) , 0,
-													rotationMatrix.at<float>(2,0) , rotationMatrix.at<float>(2,1) , rotationMatrix.at<float>(2,2) , 2,
-													0 , 0 , 0 , 1);
-
-		NSLog(@"Original");
-		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(0,0), deviceMatrix.at<float>(0,1), deviceMatrix.at<float>(0,2),  deviceMatrix.at<float>(0,3));
-		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(1,0), deviceMatrix.at<float>(1,1), deviceMatrix.at<float>(1,2),  deviceMatrix.at<float>(1,3));
-		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(2,0), deviceMatrix.at<float>(2,1), deviceMatrix.at<float>(2,2),  deviceMatrix.at<float>(2,3));
-		NSLog(@"%f\t%f\t%f\t%f", deviceMatrix.at<float>(3,0), deviceMatrix.at<float>(3,1), deviceMatrix.at<float>(3,2),  deviceMatrix.at<float>(3,3));
-		deviceMatrix = deviceMatrix.inv();
-		
-		//[self.glView setmodelviewMatrix:deviceMatrix];
-		[self.glView setDetected:YES];
-	}
 }
 
 - (IBAction) track {
@@ -392,62 +353,113 @@ using namespace cv;
 
 
 - (void) updateSensorPose:(NSTimer *)theTimer {
-	if(poseInitialized || true) {
+	if(poseInitialized) {
 		// Respond to CMDeviceMotion data
 		CMAttitude *currentAttitude = motionManager.deviceMotion.attitude;
+		
+		// Smooth reference rotation matrix
+		float smooth = 1; // 0.05
+		for(int i=0;i<3; i++) {
+			for(int j=0; j<3; j++) {
+				float dist = (referenceAttitudeMatrixTarget.at<float>(i,j)-referenceAttitudeMatrix.at<float>(i,j));
+				//referenceAttitudeMatrix.at<float>(i,j) += 1 * dist * abs(dist);
+				referenceAttitudeMatrix.at<float>(i,j) += smooth * dist;
+				dist = (referenceRotationMatrixTarget.at<float>(i,j)-referenceRotationMatrix.at<float>(i,j));
+				//referenceRotationMatrix.at<float>(i,j) += 1 * dist * abs(dist);
+				referenceRotationMatrix.at<float>(i,j) += smooth * dist;
+			}
+		}
 		//[currentAttitude multiplyByInverseOfAttitude:self.referenceAttitude];
 		
 		CMRotationMatrix deviceR = currentAttitude.rotationMatrix;
-
-		// Get into the right coordinate system
+		
 		cv::Mat rotationMatrix = (Mat_<float>(3,3) <<	deviceR.m11 , deviceR.m21, deviceR.m31,
 								  deviceR.m12 , deviceR.m22, deviceR.m32,
 								  deviceR.m13 , deviceR.m23, deviceR.m33);
 		
+		rotationMatrix =  referenceAttitudeMatrix * rotationMatrix;	// referenceAltitudeMatrix is already inverted... convenient or confusing?
 		
 		cv::Mat rotate90 = (Mat_<float>(3,3) << 0,1,0,
 												1,0,0,
 												0,0,1);
+							
 		cv::Mat flipX = (Mat_<float>(3,3) <<	-1,0,0,
 												 0,1,0,
 												 0,0,-1);
-		rotationMatrix = rotationMatrix.t();	// Invert by transposing
+		
+		
+		rotationMatrix = rotationMatrix.t();
 		rotationMatrix = flipX * rotationMatrix * flipX;
 		rotationMatrix = rotate90 * rotationMatrix;
 		rotationMatrix = rotationMatrix.t();
 		
-		// Pre-multiply the reference matrix
-		//rotationMatrix = referenceRotationMatrix * rotationMatrix;
+		rotationMatrix = rotate90 * rotationMatrix;
+		rotationMatrix = referenceRotationMatrix * rotationMatrix;
+	
+		Mat poseEstimate;
+	
+		if(visionTargetFound && visionTrackingOn) {
+			poseFilter.Correct((Mat_<float>(12,1) <<	visionEstimate.at<float>(0,3), visionEstimate.at<float>(1,3), visionEstimate.at<float>(2,3),
+											   visionEstimate.at<float>(0,0), visionEstimate.at<float>(0,1), visionEstimate.at<float>(0,2),
+											   visionEstimate.at<float>(1,0), visionEstimate.at<float>(1,1), visionEstimate.at<float>(1,2),
+											   visionEstimate.at<float>(2,0), visionEstimate.at<float>(2,1), visionEstimate.at<float>(2,2)),
+											  CAMERA_POSE, [NSDate timeIntervalSinceReferenceDate]);
+			poseFilter.setGyrosCovariance(0.5);
+			
+			poseEstimate = poseFilter.Predict([NSDate timeIntervalSinceReferenceDate]);
+			NSLog(@"Using vision.");
+		}
+		else {
+			poseFilter.setGyrosCovariance(0.00005);
+			NSLog(@"NOT using vision.");
+		}
 		
 		
-		poseFilter.statePost = (Mat_<float>(15,1) <<	//poseFilter.statePost.at<float>(0,0), poseFilter.statePost.at<float>(1,0), poseFilter.statePost.at<float>(2,0), 0,0,0,
-								0,0,2, 0,0,0,
-								rotationMatrix.at<float>(0,0) , rotationMatrix.at<float>(0,1) , rotationMatrix.at<float>(0,2),
-								rotationMatrix.at<float>(1,0) , rotationMatrix.at<float>(1,1) , rotationMatrix.at<float>(1,2),
-								rotationMatrix.at<float>(2,0) , rotationMatrix.at<float>(2,1) , rotationMatrix.at<float>(2,2));
-		poseFilter.predict();
-		poseFilter.correct((Mat_<float>(15,1) <<	//poseFilter.statePost.at<float>(0,0), poseFilter.statePost.at<float>(1,0), poseFilter.statePost.at<float>(2,0), 0,0,0,
-													0,0,2, 0,0,0,
+		if(gyroTrackingOn) {
+			poseFilter.Correct((Mat_<float>(9,1) << rotationMatrix.at<float>(0,0) , rotationMatrix.at<float>(0,1) , rotationMatrix.at<float>(0,2),
+												rotationMatrix.at<float>(1,0) , rotationMatrix.at<float>(1,1) , rotationMatrix.at<float>(1,2),
+												rotationMatrix.at<float>(2,0) , rotationMatrix.at<float>(2,1) , rotationMatrix.at<float>(2,2)),
+											GYRO_POSE, [NSDate timeIntervalSinceReferenceDate]);
+			poseEstimate = poseFilter.Predict([NSDate timeIntervalSinceReferenceDate]);
+		}
+		
+		
+		/*
+		if(gyroTrackingOn) {
+			Mat errorMatrix = (Mat_<float>(15,1) << 0,0,0,0,0,0,
 													rotationMatrix.at<float>(0,0) , rotationMatrix.at<float>(0,1) , rotationMatrix.at<float>(0,2),
 													rotationMatrix.at<float>(1,0) , rotationMatrix.at<float>(1,1) , rotationMatrix.at<float>(1,2),
-													rotationMatrix.at<float>(2,0) , rotationMatrix.at<float>(2,1) , rotationMatrix.at<float>(2,2)));
-
-		
-		// Recreate a transformation matrix from the Kalman filter state estimate
-		Mat poseEstimate = poseFilter.measurementMatrix * poseFilter.statePost;
-		
-		Mat M = Mat(4,4, CV_32F);
-		NSLog(@"%f\t\t%f\t\t%f", poseFilter.statePost.at<float>(0,0), poseFilter.statePost.at<float>(1,0), poseFilter.statePost.at<float>(2,0));
-		for(int i=0; i<poseEstimate.rows; i++) {
-			if(i < 3)		M.at<float>(i,3) = poseEstimate.at<float>(i,0);					// Translation components
-			else if(i>5)	M.at<float>((int)i/3 - 2, i%3) = poseEstimate.at<float>(i,0);	// Rotation components
+													rotationMatrix.at<float>(2,0) , rotationMatrix.at<float>(2,1) , rotationMatrix.at<float>(2,2));
+			errorMatrix -= (Mat_<float>(15,1) << 0,0,0,0,0,0,
+												poseEstimate.at<float>(6,0), poseEstimate.at<float>(7,0), poseEstimate.at<float>(8,0),
+												poseEstimate.at<float>(9,0), poseEstimate.at<float>(10,0), poseEstimate.at<float>(11,0),
+												poseEstimate.at<float>(12,0), poseEstimate.at<float>(13,0), poseEstimate.at<float>(14,0));
+			
+			Mat correctedState = poseEstimate + (errorMatrix * 0.01f);
+			poseFilter.Correct((Mat_<float>(9,1) << correctedState.at<float>(6,0) , correctedState.at<float>(7,0) , correctedState.at<float>(8,0),
+													correctedState.at<float>(9,0) , correctedState.at<float>(10,0) , correctedState.at<float>(11,0),
+													correctedState.at<float>(12,0) , correctedState.at<float>(13,0) , correctedState.at<float>(14,0)),
+							   GYRO_POSE, [NSDate timeIntervalSinceReferenceDate]);
+			
+			poseEstimate = poseFilter.Predict([NSDate timeIntervalSinceReferenceDate]);
 		}
-		M.at<float>(4,0) = 0;
-		M.at<float>(4,1) = 0;
-		M.at<float>(4,2) = 0;
-		M.at<float>(4,3) = 1;
-		M = M.inv();			// Convert from filter frame of reference to modelview frame of reference
-		[self.glView setmodelviewMatrix:M];
+		 */
+		//Mat poseEstimate = poseFilter.Predict((float)[NSDate timeIntervalSinceReferenceDate]);
+
+
+		if(poseEstimate.data) {
+			Mat M = Mat(4,4, CV_32F);
+			for(int i=0; i<poseEstimate.rows; i++) {
+				if(i < 3)		M.at<float>(i,3) = poseEstimate.at<float>(i,0);					// Translation components
+				else if(i>5)	M.at<float>((int)i/3 - 2, i%3) = poseEstimate.at<float>(i,0);	// Rotation components
+			}
+			M.at<float>(3,0) = 0;
+			M.at<float>(3,1) = 0;
+			M.at<float>(3,2) = 0;
+			M.at<float>(3,3) = 1;
+			M = M.inv();			// Convert from filter frame of reference to modelview frame of reference
+			[self.glView setmodelviewMatrix:M];
+		}
 	}
 }
 

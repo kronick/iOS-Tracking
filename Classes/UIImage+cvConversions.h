@@ -11,5 +11,7 @@
 @interface UIImage (cvConversions)
 	- (IplImage *) grayscaleIplImageRepresentation;
 	- (IplImage *) IplImageRepresentation;
+	- (cv::Mat) cvMatRepresentation;
 	+ (UIImage *) imageWithIplImage:(IplImage *)image;
+	+ (UIImage *)imageWithcvMat:(cv::Mat)mat;
 @end

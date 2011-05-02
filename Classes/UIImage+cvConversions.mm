@@ -32,6 +32,13 @@
 	return ret;
 }
 
+- (cv::Mat) cvMatRepresentation {
+	IplImage *ipl = [self IplImageRepresentation];
+	cv::Mat outMat(ipl);
+	cvReleaseImage(&ipl);
+	return outMat;
+}
+
 - (IplImage *)grayscaleIplImageRepresentation {
 	CGImageRef imageRef = self.CGImage;
 	
@@ -49,6 +56,11 @@
 	cvReleaseImage(&iplimage);
 	
 	return ret;
+}
+
++ (UIImage *)imageWithcvMat:(cv::Mat)mat {
+	IplImage ipl = mat;
+	return [UIImage imageWithIplImage:&ipl];
 }
 
 // NOTE You should convert color mode as RGB before passing to this function

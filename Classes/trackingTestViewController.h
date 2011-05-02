@@ -15,10 +15,12 @@
 #import "Homography.h"
 
 #import "overlayView.h"
-
 #import "GLView.h"
-
 #import <CoreMotion/CoreMotion.h>
+#import "ImageTaggerViewController.h"
+
+#include "PoseFilter.h"
+
 
 @interface trackingTestViewController : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate> {
 	AVCaptureSession *captureSession;
@@ -37,6 +39,9 @@
 	int frameCount;
 	
 	NSTimeInterval lastTime;
+	
+	IBOutlet UILabel *framerateLabel;
+	IBOutlet UILabel *foundPointsLabel;
 	
 	Homography *objectFinder;
 	
@@ -61,12 +66,23 @@
 	CMMotionManager *motionManager;
 	
 	// Kalman filter stuff
-	cv::KalmanFilter poseFilter;
-	cv::Mat poseOldTranslation;
-	NSTimeInterval lastVisionEstimateTime;
+	PoseFilter poseFilter;
+	
 	BOOL poseInitialized;
 	CMAttitude *referenceAttitude;
 	cv::Mat referenceRotationMatrix;
+	cv::Mat referenceRotationMatrixTarget;
+	cv::Mat referenceAttitudeMatrix;
+	cv::Mat referenceAttitudeMatrixTarget;
+	
+	cv::Mat visionEstimate;
+	BOOL visionTargetFound;
+	BOOL visionTrackingOn;
+	IBOutlet UISwitch *visionTrackingSwitch;
+	BOOL gyroTrackingOn;
+	IBOutlet UISwitch *gyroTrackingSwitch;
+	
+	ImageTaggerViewController *imageTaggerView;
 }
 
 @property (nonatomic,retain) PointTracker *pointTracker;
@@ -76,25 +92,39 @@
 @property (nonatomic,retain) CMMotionManager *motionManager;
 @property (nonatomic,retain) CMAttitude *referenceAttitude;
 
-- (void)redrawKeyPoints:(NSTimer *)timer;
-
-- (IBAction)setReferenceImage;
-- (IBAction)loadReference;
-- (IBAction)findReferenceImage;
-- (IBAction)track;
-- (void)updateMatch:(NSTimer*)theTimer;
-
-- (void)updateSensorPose:(NSTimer*)theTimer;
-
-- (void) setMilestone;
-
-
 @property (nonatomic,retain) IBOutlet UIView *previewView;
 //@property (nonatomic,retain) IBOutlet OverlayView *overlayView;
 
 @property (nonatomic,retain) AVCaptureSession *captureSession;
 @property (nonatomic,retain) AVCaptureVideoPreviewLayer *capturePreview;
 @property (nonatomic,retain) AVCaptureVideoDataOutput *captureVideoOutput;
+
+@property (nonatomic,retain) IBOutlet UISwitch *visionTrackingSwitch;
+@property (nonatomic,retain) IBOutlet UISwitch *gyroTrackingSwitch;
+
+@property (nonatomic,retain) UILabel *framerateLabel;
+@property (nonatomic,retain) UILabel *foundPointsLabel;
+
+@property (nonatomic,retain) ImageTaggerViewController *imageTaggerView;
+
+- (void)redrawKeyPoints:(NSTimer *)timer;
+
+- (IBAction)setReferenceImage;
+- (IBAction)loadReference;
+- (IBAction)findReferenceImage;
+- (IBAction)track;
+- (IBAction)visionSwitchChanged;
+- (IBAction)gyroSwitchChanged;
+- (IBAction)launchImageTagger;
+
+- (void)pauseCaptureSession;
+- (void)resumeCaptureSession;
+
+- (void)updateMatch:(NSTimer*)theTimer;
+
+- (void)updateSensorPose:(NSTimer*)theTimer;
+
+- (void) setMilestone;
 
 @end
 

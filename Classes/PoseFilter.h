@@ -9,15 +9,19 @@
  */
 
 #include <opencv2/opencv.hpp>
+#ifndef _POSE_FILTER_H_
+#define _POSE_FILTER_H_
 
 enum PoseEstimateType { CAMERA_POSE, GYRO_POSE, GPS_POSE };
 
 class PoseFilter {
  public:
 	PoseFilter();
-	cv::Mat Predict(float timestamp);
-	cv::Mat Correct(const cv::Mat& measurement, PoseEstimateType poseType);
-	
+	cv::Mat Predict(double timestamp);
+	cv::Mat Correct(const cv::Mat& measurement_in, PoseEstimateType poseType, double timestamp);
+	void setCameraTarget(const cv::Mat& target);
+	void setGyrosCovariance(float cov);
+	void setCameraCovariance(float cov);
 private:	
 	int cameraMeasurementCount;
 	int gyrosMeasurementCount;
@@ -26,8 +30,8 @@ private:
 	
 	cv::Mat statePre;					// x-
 	cv::Mat statePost;					// x
-	cv::Mat covariancePre				// P-
-	cv::Mat	covariancePost				// P
+	cv::Mat covariancePre;				// P-
+	cv::Mat	covariancePost;				// P
 	
 	cv::Mat cameraCovariance;			// [R_1]
 	cv::Mat gyrosCovariance;			// [R_2]
@@ -41,7 +45,14 @@ private:
 	cv::Mat stateTransitionModel;		// [A]
 	float velocityDrag;
 	
-	float lastPredictionTime;			// Used for calculating dT
+	double lastPredictionTime;			// Used for calculating dT
+	double lastCameraMeasurementTime;	// Used for calculating velocity
+	double lastGpsMeasurementTime;		// Used for calculating velocity
+	
+	cv::Mat lastCameraMeasurement;
+	cv::Mat lastGpsMeasurement;
+	cv::Mat cameraTarget;				// Used for smoothing
+	cv::Mat cameraState;				// Used for smoothing
 };
-	
-	
+
+#endif

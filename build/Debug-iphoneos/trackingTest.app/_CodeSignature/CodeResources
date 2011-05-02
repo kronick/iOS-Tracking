@@ -4,9 +4,17 @@
 <dict>
 	<key>files</key>
 	<dict>
+		<key>ImageTaggerViewController.nib</key>
+		<data>
+		qoU9B2TuKws+0nd0/YAAhV/I2Ss=
+		</data>
 		<key>MainWindow.nib</key>
 		<data>
-		D1Ob5+qyos+AxTfvg5ZOHQRUaso=
+		aQRhx1dxZnO0mD2/AL//vM4VXxU=
+		</data>
+		<key>MainWindow~ipad.nib</key>
+		<data>
+		e4CzZtWgIEPJu01CDQFOcimmvKI=
 		</data>
 		<key>PkgInfo</key>
 		<data>
@@ -16,9 +24,17 @@
 		<data>
 		fwyrexeD0/Dd1b9m8ok8nyAc7NM=
 		</data>
+		<key>magentaDot.png</key>
+		<data>
+		nO+EX5sR8RXL9Lax8SUQCs096Nk=
+		</data>
 		<key>trackingTestViewController.nib</key>
 		<data>
-		4Dj7Uizo8E2C/m0F+aY02MQaW3M=
+		jeEEf1zJoIqy+7tHq3Tf7irhVY8=
+		</data>
+		<key>trackingTestViewController~ipad.nib</key>
+		<data>
+		Q7OPS+WNnuGAMhB4A7K9z2P9/D8=
 		</data>
 	</dict>
 	<key>rules</key>
