@@ -82,8 +82,8 @@ void OverlayRenderer::Render()  {
 	glLoadIdentity();
 	double f_x = 786.42938232;	// Focal length in x axis
 	double f_y = 786.42938232;	// Focal length in y axis (usually the same?)
-	double c_x = 217.01358032;	// Camera primary point x
-	double c_y = 311.25384521;	// Camera primary point y
+	double c_x = 240;	//217.01358032;	// Camera primary point x
+	double c_y = 320; //311.25384521;	// Camera primary point y
 	//c_x = 480-c_x*2; c_y = 640-c_y*2;
 	double screen_width = 480;
 	double screen_height = 640;

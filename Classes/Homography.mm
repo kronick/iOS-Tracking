@@ -29,8 +29,8 @@ using namespace std;
 		cameraMatrix.at<double>(0,0) = 786.42938232;	// f_x (Focal length)
 		cameraMatrix.at<double>(1,1) = 786.42938232;	// f_y
 		cameraMatrix.at<double>(2,2) = 1;
-		cameraMatrix.at<double>(0,2) = 311.25384521;	// c_x (Lens center)
-		cameraMatrix.at<double>(1,2) = 217.01358032;	// c_y 
+		cameraMatrix.at<double>(0,2) = 320; //311.25384521;	// c_x (Lens center)
+		cameraMatrix.at<double>(1,2) = 240; //217.01358032;	// c_y 
 		
 		rotationVector.create(3,1,CV_32FC1);
 		translationVector.create(3,1,CV_32FC1);
@@ -274,7 +274,7 @@ using namespace std;
 				matrix = estimate.homography;
 				
 				
-				if(matrix.data ==0 || estimate.inliers < 15) {
+				if(matrix.data ==0 || estimate.inliers < 10) {
 					//NSLog(@"Did not detect object.");
 					return NO;
 				}

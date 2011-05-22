@@ -12,7 +12,15 @@
 #import <CoreLocation/CoreLocation.h>
 #import "UIImage+cvConversions.h"
 
+@protocol ImageTaggerDelegate
+
+- (void)setTrainingImage:(cv::Mat *)imageMat;
+
+@end
+
+
 @interface ImageTaggerViewController : UIViewController <UINavigationControllerDelegate, UIImagePickerControllerDelegate, UIGestureRecognizerDelegate, CLLocationManagerDelegate> {
+	id <ImageTaggerDelegate> delegate;
 	IBOutlet UIView *setCornersView;
 	IBOutlet UIView *setMaskView;
 	IBOutlet UIView *setLocationView;
@@ -44,6 +52,7 @@
 	IBOutlet UIImageView *corner3;
 }
 
+@property (nonatomic,retain) id <ImageTaggerDelegate> delegate;
 @property (nonatomic,retain) UIView *maximizedView;
 @property (nonatomic,retain) CLLocationManager *locationManager;
 @property (nonatomic,retain) UIImagePickerController *imagePicker;

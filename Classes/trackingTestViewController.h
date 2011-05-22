@@ -22,7 +22,7 @@
 #include "PoseFilter.h"
 
 
-@interface trackingTestViewController : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate> {
+@interface trackingTestViewController : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate, ImageTaggerDelegate> {
 	AVCaptureSession *captureSession;
 	AVCaptureVideoPreviewLayer *capturePreview;
 	AVCaptureVideoDataOutput *captureVideoOutput;

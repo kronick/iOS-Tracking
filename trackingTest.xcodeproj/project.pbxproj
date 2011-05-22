@@ -47,6 +47,7 @@
 		90AE40E312FBBF7600E59A29 /* libopencv_video.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 90AE40D812FBBF7600E59A29 /* libopencv_video.a */; };
 		90AE42DC1300789600E59A29 /* TrackedPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90AE42DB1300789600E59A29 /* TrackedPoint.mm */; };
 		90AE42EC13010F2900E59A29 /* PointTracker.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90AE42EB13010F2900E59A29 /* PointTracker.mm */; };
+		90BBA04F136E74870010F302 /* green-dot.png in Resources */ = {isa = PBXBuildFile; fileRef = 90BBA04E136E74870010F302 /* green-dot.png */; };
 		90BC5136136D4A1900D0B9E0 /* magentaDot.png in Resources */ = {isa = PBXBuildFile; fileRef = 90BC5135136D4A1900D0B9E0 /* magentaDot.png */; };
 		90C3683D13558BBF00DB5EB6 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */; };
 		90C36A57135CD12900DB5EB6 /* PoseFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 90C36A56135CD12900DB5EB6 /* PoseFilter.cpp */; };
@@ -108,6 +109,7 @@
 		90AE42DB1300789600E59A29 /* TrackedPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TrackedPoint.mm; sourceTree = "<group>"; };
 		90AE42EA13010F2900E59A29 /* PointTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PointTracker.h; sourceTree = "<group>"; };
 		90AE42EB13010F2900E59A29 /* PointTracker.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PointTracker.mm; sourceTree = "<group>"; };
+		90BBA04E136E74870010F302 /* green-dot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "green-dot.png"; sourceTree = "<group>"; };
 		90BC5135136D4A1900D0B9E0 /* magentaDot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = magentaDot.png; sourceTree = "<group>"; };
 		90C3683C13558BBF00DB5EB6 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		90C36A55135CD12900DB5EB6 /* PoseFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PoseFilter.h; sourceTree = "<group>"; };
@@ -201,6 +203,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				90BBA04E136E74870010F302 /* green-dot.png */,
 				90BC5135136D4A1900D0B9E0 /* magentaDot.png */,
 				902D7C8B136BC70F002BB79B /* ImageTaggerViewController.xib */,
 				2899E5210DE3E06400AC0155 /* trackingTestViewController.xib */,
@@ -377,6 +380,7 @@
 				902D7CDE136BDD1C002BB79B /* MainWindow~ipad.xib in Resources */,
 				902D7CE1136BDD77002BB79B /* trackingTestViewController~ipad.xib in Resources */,
 				90BC5136136D4A1900D0B9E0 /* magentaDot.png in Resources */,
+				90BBA04F136E74870010F302 /* green-dot.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

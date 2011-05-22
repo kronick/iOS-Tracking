@@ -12,7 +12,7 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="6"/>
+			<integer value="52"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -62,24 +62,13 @@
 							<object class="IBUIView" id="77046976">
 								<reference key="NSNextResponder" ref="64902951"/>
 								<int key="NSvFlags">274</int>
-								<string key="NSFrame">{{45, 2}, {40, 40}}</string>
+								<string key="NSFrame">{{72, 2}, {40, 40}}</string>
 								<reference key="NSSuperview" ref="64902951"/>
 								<object class="NSColor" key="IBUIBackgroundColor">
 									<int key="NSColorSpace">1</int>
 									<bytes key="NSRGB">MSAwIDAAA</bytes>
 								</object>
 								<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
-							</object>
-							<object class="IBUISwitch" id="21495616">
-								<reference key="NSNextResponder" ref="64902951"/>
-								<int key="NSvFlags">292</int>
-								<string key="NSFrame">{{57, 9}, {94, 27}}</string>
-								<reference key="NSSuperview" ref="64902951"/>
-								<bool key="IBUIOpaque">NO</bool>
-								<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
-								<int key="IBUIContentHorizontalAlignment">0</int>
-								<int key="IBUIContentVerticalAlignment">0</int>
-								<bool key="IBUIOn">YES</bool>
 							</object>
 							<object class="IBUISwitch" id="19190743">
 								<reference key="NSNextResponder" ref="64902951"/>
@@ -121,10 +110,11 @@
 								<reference key="IBUIToolbar" ref="64902951"/>
 								<int key="IBUISystemItemIdentifier">5</int>
 							</object>
-							<object class="IBUIBarButtonItem" id="406901572">
+							<object class="IBUIBarButtonItem" id="858839932">
 								<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
-								<reference key="IBUICustomView" ref="21495616"/>
+								<int key="IBUIStyle">1</int>
 								<reference key="IBUIToolbar" ref="64902951"/>
+								<int key="IBUISystemItemIdentifier">15</int>
 							</object>
 							<object class="IBUIBarButtonItem" id="210120374">
 								<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
@@ -214,21 +204,12 @@
 					<int key="connectionID">47</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBCocoaTouchOutletConnection" key="connection">
-						<string key="label">gyroTrackingSwitch</string>
-						<reference key="source" ref="372490531"/>
-						<reference key="destination" ref="21495616"/>
-					</object>
-					<int key="connectionID">50</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBCocoaTouchEventConnection" key="connection">
-						<string key="label">gyroSwitchChanged</string>
-						<reference key="source" ref="21495616"/>
+						<string key="label">launchImageTagger</string>
+						<reference key="source" ref="858839932"/>
 						<reference key="destination" ref="372490531"/>
-						<int key="IBEventType">13</int>
 					</object>
-					<int key="connectionID">51</int>
+					<int key="connectionID">54</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -280,7 +261,7 @@
 							<reference ref="40684898"/>
 							<reference ref="285500766"/>
 							<reference ref="210120374"/>
-							<reference ref="406901572"/>
+							<reference ref="858839932"/>
 						</object>
 						<reference key="parent" ref="774585933"/>
 					</object>
@@ -333,18 +314,9 @@
 						<reference key="parent" ref="913781107"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">49</int>
-						<reference key="object" ref="406901572"/>
-						<object class="NSMutableArray" key="children">
-							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="21495616"/>
-						</object>
+						<int key="objectID">52</int>
+						<reference key="object" ref="858839932"/>
 						<reference key="parent" ref="64902951"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">48</int>
-						<reference key="object" ref="21495616"/>
-						<reference key="parent" ref="406901572"/>
 					</object>
 				</object>
 			</object>
@@ -365,7 +337,7 @@
 					<string>39.IBViewBoundsToFrameTransform</string>
 					<string>41.IBPluginDependency</string>
 					<string>43.IBPluginDependency</string>
-					<string>48.IBPluginDependency</string>
+					<string>52.IBPluginDependency</string>
 					<string>6.IBEditorWindowLastContentRect</string>
 					<string>6.IBPluginDependency</string>
 				</object>
@@ -391,7 +363,7 @@
 					<string>com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 					<string>com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 					<string>com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
-					<string>{{392, 242}, {320, 480}}</string>
+					<string>{{331, 242}, {320, 480}}</string>
 					<string>com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 				</object>
 			</object>
@@ -411,7 +383,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">51</int>
+			<int key="maxID">54</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -425,6 +397,7 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>findReferenceImage</string>
 							<string>gyroSwitchChanged</string>
+							<string>launchImageTagger</string>
 							<string>loadReference</string>
 							<string>setReferenceImage</string>
 							<string>track</string>
@@ -432,6 +405,7 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -446,6 +420,7 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>findReferenceImage</string>
 							<string>gyroSwitchChanged</string>
+							<string>launchImageTagger</string>
 							<string>loadReference</string>
 							<string>setReferenceImage</string>
 							<string>track</string>
@@ -459,6 +434,10 @@
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">gyroSwitchChanged</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">launchImageTagger</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -483,6 +462,8 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>foundPointsLabel</string>
+							<string>framerateLabel</string>
 							<string>gyroTrackingSwitch</string>
 							<string>previewView</string>
 							<string>statusView</string>
@@ -490,6 +471,8 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>UILabel</string>
+							<string>UILabel</string>
 							<string>UISwitch</string>
 							<string>UIView</string>
 							<string>UIView</string>
@@ -500,6 +483,8 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>foundPointsLabel</string>
+							<string>framerateLabel</string>
 							<string>gyroTrackingSwitch</string>
 							<string>previewView</string>
 							<string>statusView</string>
@@ -507,6 +492,14 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBToOneOutletInfo">
+								<string key="name">foundPointsLabel</string>
+								<string key="candidateClassName">UILabel</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">framerateLabel</string>
+								<string key="candidateClassName">UILabel</string>
+							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">gyroTrackingSwitch</string>
 								<string key="candidateClassName">UISwitch</string>
@@ -660,6 +653,14 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBFrameworkSource</string>
 						<string key="minorKey">UIKit.framework/Headers/UIControl.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">UILabel</string>
+					<string key="superclassName">UIView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBFrameworkSource</string>
+						<string key="minorKey">UIKit.framework/Headers/UILabel.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">

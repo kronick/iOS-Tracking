@@ -10,6 +10,7 @@
 
 
 @implementation ImageTaggerViewController
+@synthesize delegate;
 @synthesize locationManager;
 @synthesize imagePicker;
 @synthesize maximizedView;
@@ -105,33 +106,72 @@
 		
 		IplImage *originalImg = [originalFacadeView.image IplImageRepresentation];
 		CvSize imageSize = cvGetSize(originalImg);
-		cv::Mat rectangleCornersMat =	(cv::Mat_<double>(4,2) << 0,0, 0,imageSize.height, imageSize.width,imageSize.height, imageSize.width,0);
 		cv::Mat userCornersMat =		(cv::Mat_<double>(4,2) <<	imageSize.width * (double)c0.x,imageSize.height * (double)c0.y,
 																	imageSize.width * (double)c1.x,imageSize.height * (double)c1.y,
 																	imageSize.width * (double)c2.x,imageSize.height * (double)c2.y,
 																	imageSize.width * (double)c3.x,imageSize.height * (double)c3.y);
 		
-		CvMat rectangleCorners =		rectangleCornersMat;
+		// Get aspect ratio
+		// Using equations from: http://research.microsoft.com/en-us/um/people/zhang/Papers/WhiteboardRectification.pdf
+		cv::Mat A = (cv::Mat_<float>(3,3) <<	786.42938232, 0, imageSize.width/2,
+												0, 786.42938232, imageSize.height/2,
+												0,0,1);
+		
+		float k2, k3;
+		float ratio;
+		cv::Mat _ratio;
+		cv::Mat n2, n3;
+		cv::Mat m1 = (cv::Mat_<float>(3,1) << imageSize.width * (float)c0.x, imageSize.height * (float)c0.y, 1);
+		cv::Mat m2 = (cv::Mat_<float>(3,1) << imageSize.width * (float)c3.x, imageSize.height * (float)c3.y, 1);
+		cv::Mat m3 = (cv::Mat_<float>(3,1) << imageSize.width * (float)c1.x, imageSize.height * (float)c1.y, 1);
+		cv::Mat m4 = (cv::Mat_<float>(3,1) << imageSize.width * (float)c2.x, imageSize.height * (float)c2.y, 1);
+		
+		k2 = (m1.cross(m4).dot(m3)) / ((m2.cross(m4)).dot(m3));
+		k3 = (m1.cross(m4).dot(m2)) / ((m3.cross(m4)).dot(m2));
+		n2 = (k2*m2) - m1;
+		n3 = (k3*m3) - m1;
+		
+		_ratio = (n2.t()*(A.inv().t())*(A.inv())*n2) / (n3.t()*(A.inv().t())*(A.inv())*n3);
+		ratio = sqrt(_ratio.at<float>(0,0));
+		
+		NSLog(@"Ratio: %f", ratio);
+		
+		float imageRatio = imageSize.width/imageSize.height;
+		float w = ratio > imageRatio ? imageSize.width : imageSize.height * ratio;
+		float h = ratio > imageRatio ? imageSize.width / ratio : imageSize.height; 
+		
+		cv::Mat rectangleCornersMat =	(cv::Mat_<double>(4,2) << 0,0, 0,h, w,h, w,0);
+		
+		CvMat rectangleCorners =	rectangleCornersMat;
 		CvMat userCorners =			userCornersMat;
-		CvMat *homography =				cvCreateMat(3, 3, CV_64F);
-	
-		NSLog(@"Corner 0: %f, %f", userCornersMat.at<double>(0,0), userCornersMat.at<double>(0,1));
-		NSLog(@"Corner 1: %f, %f", userCornersMat.at<double>(1,0), userCornersMat.at<double>(1,1));
-		NSLog(@"Corner 2: %f, %f", userCornersMat.at<double>(2,0), userCornersMat.at<double>(2,1));
-		NSLog(@"Corner 3: %f, %f", userCornersMat.at<double>(3,0), userCornersMat.at<double>(3,1));
-
+		CvMat *homography =			cvCreateMat(3, 3, CV_64F);
 		
 		cvFindHomography(&userCorners, &rectangleCorners, homography, 0);
 		cv::Mat homographyMat(homography);
-		NSLog(@"%f\t%f\t%f", homographyMat.at<double>(0,0), homographyMat.at<double>(0,1), homographyMat.at<double>(0,2));
-		NSLog(@"%f\t%f\t%f", homographyMat.at<double>(1,0), homographyMat.at<double>(1,1), homographyMat.at<double>(1,2));
-		NSLog(@"%f\t%f\t%f", homographyMat.at<double>(2,0), homographyMat.at<double>(2,1), homographyMat.at<double>(2,2));
 		
-		IplImage *rectifiedImg = cvCreateImage(cvGetSize(originalImg), IPL_DEPTH_8U, 3);
+		IplImage *rectifiedImg = cvCreateImage(cvSize(w,h), IPL_DEPTH_8U, 3);
 		cvWarpPerspective(originalImg, rectifiedImg, homography, 0);
 		
 		cvCvtColor(rectifiedImg, rectifiedImg, CV_BGR2RGB);
 		rectifiedFacadeView.image = [UIImage imageWithIplImage:rectifiedImg];
+		
+		/*
+		cv::Mat resizedImage;
+		cv::Mat grayImage;
+		cv::resize(*rectifiedImg, resizedImage, cv::Size(640,480),0,0, INTER_LINEAR);
+		cv::cvtColor(resizedImage, grayImage, CV_RGB2GRAY);
+		
+		cv::FAST(grayImage, mDetectedKeyPoints, FASTThreshold, true);
+		// Dynamically adjust threshold 
+		int n=0;
+		while(fabs(mDetectedKeyPoints.size() - keyPointTarget) > keyPointTarget  * .1 && n++ < 500) {
+			FASTThreshold += (float)(mDetectedKeyPoints.size() - (float)keyPointTarget) * .01;
+			if(FASTThreshold > 200) FASTThreshold = 200;
+			if(FASTThreshold < 1)   FASTThreshold = 1;
+			cv::FAST(grayImage, mDetectedKeyPoints, FASTThreshold, true);
+		}
+		*/
+		
 		cvReleaseImage(&originalImg);
 		cvReleaseImage(&rectifiedImg);
 	}
@@ -140,10 +180,17 @@
 #pragma mark -
 #pragma mark IBActions
 - (IBAction) closeImageTagger {
+	originalFacadeView.image = nil;
+	IplImage *trainImage = [rectifiedFacadeView.image IplImageRepresentation];
+	cv::Mat trainingMat(trainImage);
+	[self.delegate setTrainingImage:&trainingMat];
+	cvReleaseImage(&trainImage);
 	[self.parentViewController dismissModalViewControllerAnimated:YES];
 }
 
 - (IBAction) showCamera {
+	originalFacadeView.image = nil;
+	rectifiedFacadeView.image = nil;
 	[self presentModalViewController:self.imagePicker animated:NO];
 }
 
@@ -229,7 +276,8 @@
 			if(touch.view == corner3)
 				cornersDragging[3] = NO;
 			
-			[self updateRectifiedView];
+			if(maximizedView != setCornersView)	// Only update if the other view is visible
+				[self updateRectifiedView];
 		}
 	}
 }
@@ -267,8 +315,6 @@
 		[UIView animateWithDuration:0.5 animations:^{
 			maximizeView.frame = maximizeView.superview.bounds;
 		} completion: ^(BOOL b){
-			if(maximizeView == setCornersView)
-				[self updateRectifiedView];
 		}];	
 	}
 	else {
@@ -276,6 +322,8 @@
 		[UIView animateWithDuration:0.5 animations:^{
 			maximizeView.frame = maximizedOriginalFrame;
 		} completion: ^(BOOL b){
+			if(maximizeView == setCornersView)
+				[self updateRectifiedView];
 			self.maximizedView = nil;
 		}];			
 	}

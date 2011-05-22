@@ -48,57 +48,11 @@ using namespace cv;
 	
 	[NSTimer scheduledTimerWithTimeInterval:1/60. target:self selector:@selector(updateSensorPose:) userInfo:nil repeats:YES];
 	
-	
-	
 	NSDate *d = [NSDate date];
 	lastTime = [d timeIntervalSinceReferenceDate];
 	
 	self.pointTracker = [[[PointTracker alloc] init] autorelease];
-	
-	// Set up the capture session
-	// ---------------------------------------------------------------
-	self.captureSession = [[AVCaptureSession alloc] init];
-	self.captureSession.sessionPreset = AVCaptureSessionPreset640x480;
-	
-	self.captureVideoOutput = [[AVCaptureVideoDataOutput alloc] init];
-	dispatch_queue_t queue = dispatch_queue_create("MyQueue", NULL);
-	[self.captureVideoOutput setSampleBufferDelegate:self queue:queue];
-	self.captureVideoOutput.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
-																		forKey:(id)kCVPixelBufferPixelFormatTypeKey];
-	dispatch_release(queue);
-	
-	self.captureVideoOutput.minFrameDuration = CMTimeMake(1, 25);
-	[NSTimer scheduledTimerWithTimeInterval:1/25. target:self selector:@selector(redrawKeyPoints:) userInfo:nil repeats:YES];
-	visionTrackingOn = YES;
-	visionTargetFound = NO;
-	
-	AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-	AVCaptureDeviceInput *captureInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:nil];
-	
-	[self.captureSession beginConfiguration];
-	[self.captureSession addOutput:self.captureVideoOutput];
-	[self.captureSession addInput:captureInput];
-	[self.captureSession commitConfiguration];
-	
-	NSLog(@"Setting up preview layer...");
-	// Set up the preview layer
-	// ---------------------------------------------------------------
-	CALayer *viewPreviewLayer = self.previewView.layer;
-	self.capturePreview = [[[AVCaptureVideoPreviewLayer alloc] initWithSession:captureSession] autorelease];
-	self.capturePreview.frame = self.previewView.bounds;
-	self.capturePreview.videoGravity = AVLayerVideoGravityResize;
-	[viewPreviewLayer addSublayer:self.capturePreview];
-	
-	// Set up the OpenGL view
-	// ---------------------------------------------------------------
-	NSLog(@"Setting up OpenGL rendering layer...");
-	self.glView = [[GLView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-	[self.view insertSubview:self.glView atIndex:1];
-	
-	
-	
-	[self.captureSession startRunning];
-	
+		
 	
 	// Set up Core Motion services
 	if(self.motionManager == nil) {
@@ -123,14 +77,18 @@ using namespace cv;
 - (void)viewDidUnload {
 	// Release any retained subviews of the main view.
 	// e.g. self.myOutlet = nil;
-	[self.captureSession release];
-	[self.captureVideoOutput release];
+	[self pauseCaptureSession];
+	self.captureSession = nil;
+	self.captureVideoOutput = nil;
+	//	[self.captureSession release];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+	NSLog(@"Resuming...");
 	[self resumeCaptureSession];
 }
 - (void)viewWillDisappear:(BOOL)animated {
+	NSLog(@"Pausing...");
 	[self pauseCaptureSession];
 }
 
@@ -146,6 +104,29 @@ using namespace cv;
 
 
 # pragma -
+#pragma mark ImageTaggerDelegate
+- (void)setTrainingImage:(cv::Mat *)imageMat {
+	cv::Mat resizedImage;
+	cv::Mat grayImage;
+	cv::resize(*imageMat, resizedImage, cv::Size(640,480),0,0, INTER_LINEAR);
+	cv::cvtColor(*imageMat, grayImage, CV_BGR2GRAY);
+	
+	cv::FAST(grayImage, mDetectedKeyPoints, FASTThreshold, true);
+	// Dynamically adjust threshold 
+	int n=0;
+	while(fabs(mDetectedKeyPoints.size() - keyPointTarget) > keyPointTarget  * .1 && n++ < 500) {
+		FASTThreshold += (float)(mDetectedKeyPoints.size() - (float)keyPointTarget) * .01;
+		if(FASTThreshold > 200) FASTThreshold = 200;
+		if(FASTThreshold < 1)   FASTThreshold = 1;
+		cv::FAST(grayImage, mDetectedKeyPoints, FASTThreshold, true);
+	}
+	
+	NSLog(@"Keypoints in training image: %i", mDetectedKeyPoints.size());
+	
+	mCapturedImage = grayImage;
+	
+	[self setReferenceImage];
+}
 # pragma mark AVCaptureVideoDataOutputSampleBufferDelegate
 
 
@@ -195,9 +176,52 @@ using namespace cv;
 
 - (void)pauseCaptureSession {
 	[self.captureSession stopRunning];
+	self.capturePreview = nil;
+	//[self.glView removeFromSuperview];
 }
 
 - (void)resumeCaptureSession {
+	// Set up the capture session
+	// ---------------------------------------------------------------
+	self.captureSession = [[[AVCaptureSession alloc] init] autorelease];
+	self.captureSession.sessionPreset = AVCaptureSessionPreset640x480;
+	
+	self.captureVideoOutput = [[[AVCaptureVideoDataOutput alloc] init] autorelease];
+	dispatch_queue_t queue = dispatch_queue_create("MyQueue", NULL);
+	[self.captureVideoOutput setSampleBufferDelegate:self queue:queue];
+	self.captureVideoOutput.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
+																		forKey:(id)kCVPixelBufferPixelFormatTypeKey];
+	dispatch_release(queue);
+	
+	self.captureVideoOutput.minFrameDuration = CMTimeMake(1, 25);
+	[NSTimer scheduledTimerWithTimeInterval:1/25. target:self selector:@selector(redrawKeyPoints:) userInfo:nil repeats:YES];
+	visionTrackingOn = YES;
+	visionTargetFound = NO;
+	
+	AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+	AVCaptureDeviceInput *captureInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:nil];
+	
+	[self.captureSession beginConfiguration];
+	[self.captureSession addOutput:self.captureVideoOutput];
+	[self.captureSession addInput:captureInput];
+	[self.captureSession commitConfiguration];
+	
+	NSLog(@"Setting up preview layer...");
+	// Set up the preview layer
+	// ---------------------------------------------------------------
+	CALayer *viewPreviewLayer = self.previewView.layer;
+	self.capturePreview = [[[AVCaptureVideoPreviewLayer alloc] initWithSession:captureSession] autorelease];
+	self.capturePreview.frame = self.previewView.bounds;
+	self.capturePreview.videoGravity = AVLayerVideoGravityResize;
+	[viewPreviewLayer addSublayer:self.capturePreview];
+	
+	// Set up the OpenGL view
+	// ---------------------------------------------------------------
+	NSLog(@"Setting up OpenGL rendering layer...");
+	self.glView = [[[GLView alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
+	[self.view insertSubview:self.glView atIndex:1];
+	
+
 	[self.captureSession startRunning];
 }
 
@@ -213,8 +237,10 @@ using namespace cv;
 
 - (IBAction) launchImageTagger {
 	//[self pauseCaptureSession];
-	if(self.imageTaggerView == nil)
+	if(self.imageTaggerView == nil) {
 		self.imageTaggerView = [[[ImageTaggerViewController alloc] initWithNibName:@"ImageTaggerViewController" bundle:nil] autorelease];
+		self.imageTaggerView.delegate = self;
+	}
 	
 	[self presentModalViewController:self.imageTaggerView animated:YES];
 }
