@@ -14,6 +14,7 @@
 @synthesize locationManager;
 @synthesize imagePicker;
 @synthesize maximizedView;
+@synthesize rectifyGridView;
 
  // The designated initializer.  Override if you create the controller programmatically and want to perform customization that is not appropriate for viewDidLoad.
 
@@ -137,8 +138,16 @@
 		NSLog(@"Ratio: %f", ratio);
 		
 		float imageRatio = imageSize.width/imageSize.height;
-		float w = ratio > imageRatio ? imageSize.width : imageSize.height * ratio;
-		float h = ratio > imageRatio ? imageSize.width / ratio : imageSize.height; 
+		//float w = ratio > imageRatio ? imageSize.width : imageSize.height * ratio;
+		//float h = ratio > imageRatio ? imageSize.width / ratio : imageSize.height; 
+		float w = imageSize.width * max(sqrtf(powf(c3.x-c0.x,2)+powf(c3.y-c0.y,2)),
+										sqrtf(powf(c2.x-c1.x,2)+powf(c2.y-c1.y,2)));
+		float h = w / ratio;
+		
+		
+		//float w = ratio > imageRatio ? 640 : 480 * ratio;
+		//float h = ratio > imageRatio ? 640 / ratio : 480; 
+		NSLog(@"Dimensions: %f x %f", w, h);
 		
 		cv::Mat rectangleCornersMat =	(cv::Mat_<double>(4,2) << 0,0, 0,h, w,h, w,0);
 		
@@ -154,7 +163,15 @@
 		
 		cvCvtColor(rectifiedImg, rectifiedImg, CV_BGR2RGB);
 		rectifiedFacadeView.image = [UIImage imageWithIplImage:rectifiedImg];
+		elevationBackgroundView.image = rectifiedFacadeView.image;
+		mapThumbnailView.image = rectifiedFacadeView.image;
+		mapThumbnailView.frame = CGRectMake(mapThumbnailView.frame.origin.x,
+											mapThumbnailView.frame.origin.y,
+											mapThumbnailView.frame.size.width,
+											mapThumbnailView.frame.size.width * 
+												mapThumbnailView.image.size.height/mapThumbnailView.image.size.width);
 		
+		[self updateMapView];
 		/*
 		cv::Mat resizedImage;
 		cv::Mat grayImage;
@@ -175,6 +192,47 @@
 		cvReleaseImage(&originalImg);
 		cvReleaseImage(&rectifiedImg);
 	}
+}
+
+- (void) updateMapView {
+	
+	// Undo old transformations
+	mapThumbnailView.transform = CGAffineTransformIdentity;
+	
+	// Find the angle of the two corners
+	CGFloat angle = atan2(mapCorner1.frame.origin.y-mapCorner0.frame.origin.y,
+						  mapCorner1.frame.origin.x-mapCorner0.frame.origin.x);
+	
+	// Get the center of the thumbnail overlay and the corners
+	CGPoint thumbCenter = CGPointMake(mapThumbnailView.frame.origin.x + mapThumbnailView.frame.size.width/2,
+									  mapThumbnailView.frame.origin.y + mapThumbnailView.frame.size.height/2);
+	CGPoint corner0Center = CGPointMake(mapCorner0.frame.origin.x + mapCorner0.frame.size.width/2,
+										mapCorner0.frame.origin.y + mapCorner0.frame.size.height/2);
+	CGPoint corner1Center = CGPointMake(mapCorner1.frame.origin.x + mapCorner1.frame.size.width/2,
+										mapCorner1.frame.origin.y + mapCorner1.frame.size.height/2);
+	
+	CGPoint cornerToCenter = CGPointMake(corner0Center.x-thumbCenter.x, corner0Center.y-thumbCenter.y);
+	cornerToCenter = CGPointApplyAffineTransform(cornerToCenter, CGAffineTransformMakeRotation(-angle));
+	
+	CGFloat cornerDistance = sqrt(pow(corner0Center.x-corner1Center.x,2) + pow(corner0Center.y-corner1Center.y,2));
+	CGFloat scale = cornerDistance/mapThumbnailView.frame.size.width;
+	mapThumbnailView.transform = CGAffineTransformMakeScale(scale,scale);
+	
+	mapThumbnailView.frame = CGRectMake(cornerToCenter.x+thumbCenter.x,
+										cornerToCenter.y+thumbCenter.y-mapThumbnailView.frame.size.height,
+										mapThumbnailView.frame.size.width,
+										mapThumbnailView.frame.size.height);
+	
+	mapThumbnailView.transform = CGAffineTransformConcat(mapThumbnailView.transform, CGAffineTransformMakeRotation(angle));
+	
+	CGFloat newWidth  = elevationBackgroundView.image.size.width * scale/1.5;
+	CGFloat newHeight = elevationBackgroundView.image.size.height * scale/1.5;
+	elevationBackgroundView.frame = CGRectMake(elevationBackgroundView.frame.origin.x -
+											   (newWidth-elevationBackgroundView.frame.size.width)/2,
+											   elevationBackgroundView.frame.origin.y - 
+											   (newHeight-elevationBackgroundView.frame.size.height),
+											   newWidth,
+											   newHeight);	
 }
 
 #pragma mark -
@@ -237,7 +295,31 @@
 	
 	corner.frame = CGRectMake(point.x + x, point.y + y, w, h);
 	
+	CGPoint center = CGPointMake(point.x+x+w/2, point.y+y+h/2);
+	
+	if(corner == corner0)
+		[rectifyGridView setCorner:0 toPoint:center];
+	if(corner == corner1)
+		[rectifyGridView setCorner:1 toPoint:center];
+	if(corner == corner2)
+		[rectifyGridView setCorner:2 toPoint:center];
+	if(corner == corner3)
+		[rectifyGridView setCorner:3 toPoint:center];
+	
 	// TODO: Update the data structures that depend on the corners' positions
+}
+
+- (void)moveMapCorner:(UIImageView *)corner by:(CGPoint)point {
+	CGFloat x,y,w,h;
+	x = corner.frame.origin.x;
+	y = corner.frame.origin.y;
+	w = corner.frame.size.width;
+	h = corner.frame.size.height;
+	
+	// Move the corner
+	corner.frame = CGRectMake(point.x + x, point.y + y, w, h);
+	
+	[self updateMapView];
 }
 
 #pragma mark -
@@ -286,12 +368,29 @@
 	NSEnumerator *enumerator = [touches objectEnumerator];
 	UITouch *touch = nil;
 	while (touch = [enumerator nextObject]) {
+		CGPoint change;
+		change.x = [touch locationInView:self.view].x - [touch previousLocationInView:self.view].x;
+		change.y = [touch locationInView:self.view].y - [touch previousLocationInView:self.view].y;
+		
 		if(touch.view == corner0 || touch.view == corner1 || touch.view == corner2 || touch.view == corner3) {
-			CGPoint change;
-			change.x = [touch locationInView:touch.view].x - [touch previousLocationInView:touch.view].x;
-			change.y = [touch locationInView:touch.view].y - [touch previousLocationInView:touch.view].y;
 			[self moveCornerMarker:(UIImageView *)touch.view by:change];
 		}		
+		else if(touch.view == elevationBackgroundView) {
+			CGFloat x,y,w,h;
+			x = elevationBackgroundView.frame.origin.x;
+			y = elevationBackgroundView.frame.origin.y;
+			w = elevationBackgroundView.frame.size.width;
+			h = elevationBackgroundView.frame.size.height;
+			
+			elevationBackgroundView.frame = CGRectMake(x, change.y + y, w, h);
+		}
+		else if(touch.view == mapCorner0 || touch.view == mapCorner1) {
+			[self moveMapCorner:(UIImageView *)touch.view by:change];
+		}
+		else if(touch.view == mapThumbnailView) {
+			[self moveMapCorner:mapCorner0 by:change];
+			[self moveMapCorner:mapCorner1 by:change];
+		}
 	}
 }
 

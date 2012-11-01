@@ -38,15 +38,28 @@ public:
 	void OnRotate(DeviceOrientation newOrientation) {}
 	
 	void DrawRect(float x, float y, float width, float height);
+	void DrawCircle(float x, float y, float radius);
+	void DrawPolygon(float x, float y, float radius, int sides);
+	void DrawCircleStroke(float x, float y, float radius);
+	void DrawPolygonStroke(float x, float y, float radius, int sides);
 	void DrawLine(float x1, float y1, float x2, float y2);
 	void DrawLine(float x1, float y1, float z1, float x2, float y2, float z2);
+	
+	void DrawSprite(GLuint textureID, float x, float y, float width, float height);
+	void DrawSprite(GLuint textureID, float x, float y, float width, float height, float ULs, float ULt, float BRs, float BRt);
 	
 	void setKeypoints(std::vector<cv::KeyPoint> newKeypoints);
 	void setCorners(CGPoint corners[]);
 	void setModelviewMatrix(cv::Mat matrix);
 	void setDrawOverlay(bool draw);
 	
+	void setTexture(int textureID, void *imageDataPointer, int width, int height);
+	
 	int frameCount;
+	int moveCount;
+	
+	float scale;
+	CGPoint translation;
 private:
 	GLuint m_framebuffer;
 	GLuint m_renderbuffer;
@@ -61,4 +74,6 @@ private:
 	
 	int m_overlayFade;
 	const static int OVERLAY_FADE_TIME = 30;
+	
+	GLuint m_textures[16];
 };

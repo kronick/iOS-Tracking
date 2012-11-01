@@ -13,6 +13,8 @@ OverlayRenderer::OverlayRenderer() {
 	glGenRenderbuffersOES(1, &m_renderbuffer);
 	glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_renderbuffer);
 	frameCount = 0;
+	moveCount = 0;
+	scale = 1;
 }
 
 void OverlayRenderer::Initialize(int width, int height) {
@@ -31,6 +33,14 @@ void OverlayRenderer::Initialize(int width, int height) {
 	m_overlayFade = OVERLAY_FADE_TIME;
 
 	memcpy(m_modelviewMatrix_target, m_modelviewMatrix, sizeof(GLfloat) * 16);
+	
+	glGenTextures(16, &m_textures[0]);
+	
+	glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    //glBlendFunc(GL_ONE, GL_SRC_COLOR);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void OverlayRenderer::Render()  {
@@ -60,7 +70,7 @@ void OverlayRenderer::Render()  {
 	}
 	*/
 	
-	if(m_drawOverlay) {
+	if(m_drawOverlay && false) {
 		glColor4f(1, 1, 1, 1);
 		for(int i=0; i<4; i++) {
 			DrawLine(foundCorners[0].y, foundCorners[0].x, foundCorners[1].y, foundCorners[1].x);
@@ -84,13 +94,10 @@ void OverlayRenderer::Render()  {
 	double f_y = 786.42938232;	// Focal length in y axis (usually the same?)
 	double c_x = 240;	//217.01358032;	// Camera primary point x
 	double c_y = 320; //311.25384521;	// Camera primary point y
-	//c_x = 480-c_x*2; c_y = 640-c_y*2;
+	
 	double screen_width = 480;
 	double screen_height = 640;
 
-	//double fovY = 1/(f_x/screen_height * 2);
-	double fovY = 1/(f_x * 2);
-	double aspectRatio = screen_width/screen_height * f_y/f_x;
 	double near = .1;
 	double far = 1000;
 
@@ -98,7 +105,7 @@ void OverlayRenderer::Render()  {
 							0, 2*f_y/screen_height, 0, 0,
 							2*(c_x/screen_width) - 1, 2*(c_y/screen_height) - 1, (far + near)/(near-far), -1,
 							0, 0, 2 * near * far / (near - far), 0};
-	//glTranslatef(0.5, -0.5 * screen_width/screen_height, 0);
+
 	glMultMatrixf(cameraMatrix);
 	
 	// Ease into view
@@ -108,20 +115,14 @@ void OverlayRenderer::Render()  {
 		m_modelviewMatrix[i] += 1 * dist * dist * (dist > 0 ? 1 : -1);
 		m_modelviewMatrix[i] = m_modelviewMatrix_target[i];
 	}
-	/*
-	for(int i=12; i<16; i++)	// Translation
-		m_modelviewMatrix[i] += 0.2f * sqrt(m_modelviewMatrix_target[i] - m_modelviewMatrix[i]);
-	*/
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glRotatef(-90, 0, 0, 1);
-	//glTranslatef(0.5, -0.5*screen_width/screen_height, 0);
-	//glTranslatef(0.5, -0.5*screen_width/screen_height, 0);
 	glMultMatrixf(m_modelviewMatrix);
-	//glTranslatef(0.5, -240./640., 0);
-	//glTranslatef(-0.5, 0.5*screen_width/screen_height, 0);
-	//glTranslatef(0, -1*screen_width/screen_height, 0);
-	glRotatef(-90, 0, 0, 1);
+	//glRotatef(-90, 0, 0, 1);
+	
+	glTranslatef(0, -1, 0);
 	
 	if(!m_drawOverlay) {
 		m_overlayFade--;
@@ -143,6 +144,9 @@ void OverlayRenderer::Render()  {
 		//float alpha = m_overlayFade%3 == 0 ? 1 : 0;	// Flicker
 		
 		//glTranslatef(0, 0, -2);
+		
+		/*
+		//Draw grid lines----------------------------------------
 		glColor4f(0.5*alpha, 0.5*alpha, 0.5*alpha, alpha*0.5);
 		DrawRect(.125*2, .125*3, .25*2, .25*3);
 		for(int i=-50; i<=50; i++) {
@@ -177,7 +181,88 @@ void OverlayRenderer::Render()  {
 		
 		glColor4f(0, 0, 1*alpha, alpha);
 		DrawLine(0,0,0, 0,0,1);
+		*/
 		
+		// Draw some undulating stuff
+		/*
+		if(m_drawOverlay)
+			moveCount++;
+		float e = 0.1;
+		float x,y,z;
+		for(int i=0; i<16; i++) {
+			for(int j=0; j<8; j++) {
+				x = (8-i)*2*e;
+				y = j*2*e;
+				if(i%2==0) y+= 0.5 * 2*e;
+				//y = j * e * 1.5;
+				//x = (powf((j-8-(i/2)),2)+5*i)*e/4-1;
+				z = sin((frameCount + 8*i)/13.)*.05 + sin((frameCount + 8*j)/20.)*.05 + .1; 
+				glPushMatrix();
+					glTranslatef(x, y, z);
+					
+					DrawSprite(1, 0, 0, e, e);
+					glColor4f(1, 1, 1, .5);
+					
+					DrawLine(0,0,0, 0,0,-z);
+					glColor4f(0,1,.5,.5);
+					DrawPolygon(0,0, e/2, 6);
+					glColor4f(1,1,1,1);
+					glLineWidth(4);
+					DrawPolygonStroke(0,0, e/2, 6);
+
+				glPopMatrix();
+			}
+		}
+		*/
+		glTranslatef(translation.x, translation.y, 0);
+		glScalef(scale, scale, scale);
+		
+		// Draw barn
+		glColor4f(1, 1, 1, .3);
+		DrawSprite(2, 1,0.5, 2,1);
+		
+		glColor4f(1, 1, 1, .75);
+		// Draw rainbow
+		glPushMatrix();
+		//glTranslatef(0, 0, -10);
+		DrawSprite(3, 0,2, 8,4, 0.0,0.584, 1.0,0.461);
+		glPopMatrix();
+		
+		// Draw birds
+		for(int i=0; i<10; i++) {
+			glPushMatrix();
+			glRotatef(frameCount/(2.+(cosf(i)+1))+20*i, 0,0,1);
+			glTranslatef(3.5 + cosf(i), 0, cosf(frameCount/2)*0.05+0.2);
+			glRotatef(-frameCount/(2.+(cosf(i)+1))-20*i, 0,0,1);
+			DrawSprite(3, 0,0, 1,0.570, 0,0.4316, 1.0,0.289);
+			glPopMatrix();
+		}
+		
+		glColor4f(1, 1, 1, 1);
+		
+		// Draw cow
+		glPushMatrix();
+		glTranslatef(0, 0, .5);
+		DrawSprite(3, -0.2,0.109, 0.33333,0.21866, 0.0,1, 1.0,0.836);
+		glPopMatrix();
+		
+		glPushMatrix();
+		glTranslatef(0.5, 0, .25);
+		glRotatef(20, 0, 1, 0);
+		DrawSprite(3, 0,0.109, 0.33333,0.21866, 0.0,1, 1.0,0.836);
+		glPopMatrix();
+		
+		glPushMatrix();
+		glTranslatef(1, 0, .1);
+		glRotatef(-10, 0, 1, 0);
+		DrawSprite(3, 0,0.109, 0.33333,0.21866, 0.0,1, 1.0,0.836);
+		glPopMatrix();
+		
+		glPushMatrix();
+		glTranslatef(2, 0, .6);
+		glRotatef(-70, 0, 1, 0);
+		DrawSprite(3, 0,0.109, 0.33333,0.21866, 0.0,1, 1.0,0.836);
+		glPopMatrix();
 	}
 }
 
@@ -225,6 +310,92 @@ void OverlayRenderer::DrawRect(float x, float y, float width, float height) {
 	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
+void OverlayRenderer::DrawSprite(GLuint textureID, float x, float y, float width, float height) {
+	DrawSprite(textureID, x, y, width, height, 0,1, 1,0);
+}
+void OverlayRenderer::DrawSprite(GLuint textureID, float x, float y, float width, float height,
+								float ULs, float ULt, float BRs, float BRt) {
+	float h_width  = width  * 0.5f;
+	float h_height = height * 0.5f;
+	vertex2 Vertices[] = {
+		{x-h_width, y+h_height},
+		{x+h_width, y+h_height},
+		{x-h_width, y-h_height},
+		{x+h_width, y-h_height}
+	};
+	
+	vertex3 Normals[] = {
+		{0.0,0.0,1.0},
+		{0.0,0.0,1.0},
+		{0.0,0.0,1.0},
+		{0.0,0.0,1.0}
+	};
+	
+	GLfloat TextureCoords[] = {
+		ULs, ULt,
+		BRs, ULt,
+		ULs, BRt,
+		BRs, BRt
+	};
+	
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glBindTexture(GL_TEXTURE_2D, textureID+1);
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex2), &Vertices[0].x);
+	glNormalPointer(GL_FLOAT, sizeof(vertex3), &Normals[0].x);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat)*2, TextureCoords);
+	GLsizei vertexCount = sizeof(Vertices) / sizeof(vertex2);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+	
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+
+void OverlayRenderer::DrawCircleStroke(float x, float y, float radius) {
+	DrawPolygonStroke(x,y,radius,20);
+}
+void OverlayRenderer::DrawCircle(float x, float y, float radius) {
+	DrawPolygon(x,y,radius,20);
+}
+void OverlayRenderer::DrawPolygon(float x, float y, float radius, int sides) {
+	vertex2 Vertices[sides+2];
+	Vertices[0].x = x;
+	Vertices[0].y = y;
+	for(int i=1; i<sides+2; i++) {
+		Vertices[i].x = radius * cosf((float)i/sides * M_PI * 2);
+		Vertices[i].y = radius * sinf((float)i/sides * M_PI * 2);
+	}
+	
+	glEnableClientState(GL_VERTEX_ARRAY);
+	
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex2), &Vertices[0].x);
+	
+	GLsizei vertexCount = sizeof(Vertices) / sizeof(vertex2);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, vertexCount);
+	
+	glDisableClientState(GL_VERTEX_ARRAY);
+}
+void OverlayRenderer::DrawPolygonStroke(float x, float y, float radius, int sides) {
+	vertex2 Vertices[sides];
+	for(int i=0; i<sides; i++) {
+		Vertices[i].x = radius * cosf((float)i/sides * M_PI * 2);
+		Vertices[i].y = radius * sinf((float)i/sides * M_PI * 2);
+	}
+	
+	glEnableClientState(GL_VERTEX_ARRAY);
+	
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex2), &Vertices[0].x);
+	
+	GLsizei vertexCount = sizeof(Vertices) / sizeof(vertex2);
+	glDrawArrays(GL_LINE_LOOP, 0, vertexCount);
+	
+	glDisableClientState(GL_VERTEX_ARRAY);
+}
+
+
+
 void OverlayRenderer::DrawLine(float x1, float y1, float z1, float x2, float y2, float z2) {
 	vertex3 vertices[] = {
 		{x1,y1,z1},
@@ -236,7 +407,7 @@ void OverlayRenderer::DrawLine(float x1, float y1, float z1, float x2, float y2,
 	glVertexPointer(3, GL_FLOAT, sizeof(vertex3), &vertices[0].x);
 	
 	GLsizei vertexCount = sizeof(vertices) / sizeof(vertex3);
-	glLineWidth(3);
+	//glLineWidth(3);
 	glDrawArrays(GL_LINES, 0, vertexCount);
 	
 	glDisableClientState(GL_VERTEX_ARRAY);
@@ -254,9 +425,18 @@ void OverlayRenderer::DrawLine(float x1, float y1, float x2, float y2) {
 	glVertexPointer(2, GL_FLOAT, sizeof(vertex2), &Vertices[0].x);
 	
 	GLsizei vertexCount = sizeof(Vertices) / sizeof(vertex2);
-	glLineWidth(3);
+	//glLineWidth(3);
 	glDrawArrays(GL_LINES, 0, vertexCount);
 	
 	glDisableClientState(GL_VERTEX_ARRAY);	
 }
 
+#pragma mark -
+#pragma	mark Texture handling
+void OverlayRenderer::setTexture(int textureID, void *imageData, int width, int height) {
+	glBindTexture(GL_TEXTURE_2D, m_textures[textureID]);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR); 
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+}

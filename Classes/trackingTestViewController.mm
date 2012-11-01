@@ -35,7 +35,7 @@ using namespace cv;
 	FASTThreshold = 30;
 	frameCount = 0;
 	setNewMilestone = NO;
-	keyPointTarget = 100;
+	keyPointTarget = 200;
 	
 	self.objectFinder = [[[Homography alloc] init] autorelease];
 	
@@ -63,6 +63,14 @@ using namespace cv;
 	[motionManager startDeviceMotionUpdates];
 	gyroTrackingOn = YES;
 	
+	// Set up gestures	
+	UIPinchGestureRecognizer *pinchGestureRecognizer = [[[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(handlePinch:)] autorelease];
+	pinchGestureRecognizer.delegate = self;
+	[[self view] addGestureRecognizer:pinchGestureRecognizer];
+	UIPanGestureRecognizer *panGestureRecognizer = [[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)] autorelease];
+	panGestureRecognizer.delegate = self;
+	[[self view] addGestureRecognizer:panGestureRecognizer];
+
 	NSLog(@"View Did Load");
 }
 
@@ -106,9 +114,9 @@ using namespace cv;
 # pragma -
 #pragma mark ImageTaggerDelegate
 - (void)setTrainingImage:(cv::Mat *)imageMat {
-	cv::Mat resizedImage;
+	//cv::Mat resizedImage;
 	cv::Mat grayImage;
-	cv::resize(*imageMat, resizedImage, cv::Size(640,480),0,0, INTER_LINEAR);
+	//cv::resize(*imageMat, resizedImage, cv::Size(640,480),0,0, INTER_LINEAR);
 	cv::cvtColor(*imageMat, grayImage, CV_BGR2GRAY);
 	
 	cv::FAST(grayImage, mDetectedKeyPoints, FASTThreshold, true);
@@ -237,6 +245,7 @@ using namespace cv;
 
 - (IBAction) launchImageTagger {
 	//[self pauseCaptureSession];
+	keyPointTarget = 200;
 	if(self.imageTaggerView == nil) {
 		self.imageTaggerView = [[[ImageTaggerViewController alloc] initWithNibName:@"ImageTaggerViewController" bundle:nil] autorelease];
 		self.imageTaggerView.delegate = self;
@@ -255,16 +264,16 @@ using namespace cv;
 	[objectFinder setSourceImage:&mMilestoneImage];
 	[objectFinder setSourceKeyPoints:&mMilestoneKeyPoints];
 	[objectFinder train];
-	[objectFinder saveTrainingData:@"someshit.yaml.gz"];
-	keyPointTarget = 200;
+	[objectFinder saveTrainingData:@"someshit.xml"];
+	keyPointTarget = 500;
 	[self.statusView setBackgroundColor:[UIColor greenColor]];
 }
 - (IBAction) loadReference {
 	[self.statusView setHidden:NO];
 	[self.statusView setBackgroundColor:[UIColor yellowColor]];
-	[objectFinder loadTrainingData:@"someshit.yaml.gz"];
+	[objectFinder loadTrainingData:@"someshit.xml"];
 	[self.statusView setBackgroundColor:[UIColor greenColor]];
-	keyPointTarget = 200;
+	keyPointTarget = 500;
 }
 - (IBAction) findReferenceImage {
 	//visionTargetFound = NO;
@@ -307,48 +316,26 @@ using namespace cv;
 			visionTargetFound = YES;
 			Mat M = [objectFinder getModelviewMatrix];
 			M = M.inv();			// Invert to get camera pose relative to found marker (*)
-			if(!poseInitialized || true) {
-				if(motionManager.deviceMotion != nil) {
-					self.referenceAttitude = motionManager.deviceMotion.attitude;
-					
-					referenceAttitudeMatrixTarget = (Mat_<float>(3,3) <<	referenceAttitude.rotationMatrix.m11, referenceAttitude.rotationMatrix.m12, referenceAttitude.rotationMatrix.m13, 
-																	referenceAttitude.rotationMatrix.m21, referenceAttitude.rotationMatrix.m22, referenceAttitude.rotationMatrix.m23, 
-																	referenceAttitude.rotationMatrix.m31, referenceAttitude.rotationMatrix.m32, referenceAttitude.rotationMatrix.m33);
-					referenceRotationMatrixTarget = (Mat_<float>(3,3) << M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),
-													 M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),
-													 M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2));
-					if(!poseInitialized) {
-						referenceRotationMatrix = referenceRotationMatrixTarget;
-						referenceAttitudeMatrix = referenceAttitudeMatrixTarget;
-					}
-						
-					poseInitialized = YES;
+
+			if(motionManager.deviceMotion != nil) {
+				self.referenceAttitude = motionManager.deviceMotion.attitude;
+				referenceAttitudeMatrixTarget = (Mat_<float>(3,3) <<
+													referenceAttitude.rotationMatrix.m11, referenceAttitude.rotationMatrix.m12, referenceAttitude.rotationMatrix.m13, 
+													referenceAttitude.rotationMatrix.m21, referenceAttitude.rotationMatrix.m22, referenceAttitude.rotationMatrix.m23, 
+													referenceAttitude.rotationMatrix.m31, referenceAttitude.rotationMatrix.m32, referenceAttitude.rotationMatrix.m33);
+				referenceRotationMatrixTarget = (Mat_<float>(3,3) << M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),
+													M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),
+													M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2));
+				if(!poseInitialized) {
+					referenceRotationMatrix = referenceRotationMatrixTarget;
+					referenceAttitudeMatrix = referenceAttitudeMatrixTarget;
 				}
+					
+				poseInitialized = YES;
+				
 			}
 			
 			visionEstimate = M;
-			/*
-			poseFilter.Predict([NSDate timeIntervalSinceReferenceDate]);
-			Mat poseEstimate = poseFilter.Correct((Mat_<float>(12,1) <<	M.at<float>(0,3), M.at<float>(1,3), M.at<float>(2,3),
-														M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),
-														M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),
-														M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2)),
-												  CAMERA_POSE, [NSDate timeIntervalSinceReferenceDate]);
-
-			for(int i=0; i<poseEstimate.rows; i++) {
-				if(i < 3)		M.at<float>(i,3) = poseEstimate.at<float>(i,0);					// Translation components
-				else if(i>5)	M.at<float>((int)i/3 - 2, i%3) = poseEstimate.at<float>(i,0);	// Rotation components
-			}
-			
-			M = M.inv();			// Back to the marker's pose, reversing (*)
-			*/
-			/*
-			NSLog(@"Fused transformation matrix:");
-			NSLog(@"%f\t%f\t%f\t%f", M.at<float>(0,0), M.at<float>(0,1), M.at<float>(0,2),  M.at<float>(0,3));
-			NSLog(@"%f\t%f\t%f\t%f", M.at<float>(1,0), M.at<float>(1,1), M.at<float>(1,2),  M.at<float>(1,3));
-			NSLog(@"%f\t%f\t%f\t%f", M.at<float>(2,0), M.at<float>(2,1), M.at<float>(2,2),  M.at<float>(2,3));
-			NSLog(@"%f\t%f\t%f\t%f", M.at<float>(3,0), M.at<float>(3,1), M.at<float>(3,2),  M.at<float>(3,3));
-			*/
 			
 			[self.glView setFoundCorners:corners];
 			//[self.glView setmodelviewMatrix:M];
@@ -384,7 +371,8 @@ using namespace cv;
 		CMAttitude *currentAttitude = motionManager.deviceMotion.attitude;
 		
 		// Smooth reference rotation matrix
-		float smooth = 1; // 0.05
+		
+		float smooth = .5; // 0.05
 		for(int i=0;i<3; i++) {
 			for(int j=0; j<3; j++) {
 				float dist = (referenceAttitudeMatrixTarget.at<float>(i,j)-referenceAttitudeMatrix.at<float>(i,j));
@@ -395,7 +383,7 @@ using namespace cv;
 				referenceRotationMatrix.at<float>(i,j) += smooth * dist;
 			}
 		}
-		//[currentAttitude multiplyByInverseOfAttitude:self.referenceAttitude];
+		
 		
 		CMRotationMatrix deviceR = currentAttitude.rotationMatrix;
 		
@@ -425,19 +413,20 @@ using namespace cv;
 		Mat poseEstimate;
 	
 		if(visionTargetFound && visionTrackingOn) {
+			poseFilter.setCameraCovariance(0.002);
 			poseFilter.Correct((Mat_<float>(12,1) <<	visionEstimate.at<float>(0,3), visionEstimate.at<float>(1,3), visionEstimate.at<float>(2,3),
 											   visionEstimate.at<float>(0,0), visionEstimate.at<float>(0,1), visionEstimate.at<float>(0,2),
 											   visionEstimate.at<float>(1,0), visionEstimate.at<float>(1,1), visionEstimate.at<float>(1,2),
 											   visionEstimate.at<float>(2,0), visionEstimate.at<float>(2,1), visionEstimate.at<float>(2,2)),
 											  CAMERA_POSE, [NSDate timeIntervalSinceReferenceDate]);
-			poseFilter.setGyrosCovariance(0.5);
+			poseFilter.setGyrosCovariance(0.05);
 			
 			poseEstimate = poseFilter.Predict([NSDate timeIntervalSinceReferenceDate]);
-			NSLog(@"Using vision.");
+			//NSLog(@"Using vision.");
 		}
 		else {
-			poseFilter.setGyrosCovariance(0.00005);
-			NSLog(@"NOT using vision.");
+			poseFilter.setGyrosCovariance(0.000001);
+			//NSLog(@"NOT using vision.");
 		}
 		
 		
@@ -489,6 +478,32 @@ using namespace cv;
 	}
 }
 
+#pragma mark UIGestureRecognizerDelegate
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+	return (![touch.view isKindOfClass:[UIButton class]] && ![touch.view.superview isKindOfClass:[UIToolbar class]] && ![touch.view isKindOfClass:[UIToolbar class]]);
+}
 
+- (void)handlePinch:(UIPinchGestureRecognizer *)sender {
+	static CGFloat scale = 1;
+	static CGFloat lastScale = sender.scale;
+	if(sender.state != UIGestureRecognizerStateBegan)
+		scale *= sender.scale / lastScale;
+	
+	lastScale = sender.scale;
+	[self.glView setScale:scale];
+}
+- (void)handlePan:(UIPanGestureRecognizer *)sender {
+	static CGPoint p0 = [sender translationInView:self.view];
+	CGPoint p = [sender translationInView:self.view];
+	if(sender.state == UIGestureRecognizerStateBegan)
+		p0 = p;
+	
+	CGPoint dP;
+	dP.x = p.x - p0.x;
+	dP.y = p.y - p0.y;
+	p0 = p;
+	NSLog(@"Translation: %f, %f", [sender translationInView:self.view].x, [sender translationInView:self.view].y);
+	[self.glView translate:dP];
+}
 
 @end

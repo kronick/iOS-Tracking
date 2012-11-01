@@ -6,7 +6,7 @@
 	<dict>
 		<key>ImageTaggerViewController.nib</key>
 		<data>
-		LNgcq5uhzZoSlOZBt7/lkowJy9s=
+		zArkQD1FUHocnA6nZ4noyxc9Zm0=
 		</data>
 		<key>MainWindow.nib</key>
 		<data>
@@ -20,9 +20,13 @@
 		<data>
 		n57qDP4tZfLD1rCS43W0B4LQjzE=
 		</data>
+		<key>cyan-dot.png</key>
+		<data>
+		QoffHCNSWKSr61G7w2u56Y4kOOU=
+		</data>
 		<key>embedded.mobileprovision</key>
 		<data>
-		fwyrexeD0/Dd1b9m8ok8nyAc7NM=
+		3hXggwkzGwrGGytYpkMvNLe0/20=
 		</data>
 		<key>green-dot.png</key>
 		<data>
@@ -31,6 +35,22 @@
 		<key>magentaDot.png</key>
 		<data>
 		Ta6iMR7o63YxrHjCebcu4EYp9No=
+		</data>
+		<key>scale-bird.png</key>
+		<data>
+		OzYT+RUSUdTBwoTLWQBJkkY0mM0=
+		</data>
+		<key>scale-giraffe.png</key>
+		<data>
+		JpS0XC3qMotPHXn6EJbRlRYlUTM=
+		</data>
+		<key>scale-guy-pipe-cyan.png</key>
+		<data>
+		QNQHuSGM7OmxTkTVWv7neHJCBTE=
+		</data>
+		<key>scale-guy-pipe.png</key>
+		<data>
+		YnAZ0XO+A4zfUgB6CfGnVsdS2bc=
 		</data>
 		<key>trackingTestViewController.nib</key>
 		<data>

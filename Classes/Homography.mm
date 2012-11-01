@@ -171,8 +171,15 @@ using namespace std;
 	//	NSLog(@"%f , %f", sourceKeyPoints[i].pt.x, sourceKeyPoints[i].pt.y);
 	//NSLog(@"Source keypoint size: %i", sourceKeyPoints[0].pt.y);
 	fern.trainFromSingleView(sourceImage, sourceKeyPoints,
-							 32, (int)sourceKeyPoints.size(), 20, 10, 2000,
+							 32, (int)sourceKeyPoints.size(), 20, 10, 500,
 							 FernClassifier::COMPRESSION_NONE, patchGen);
+	
+	// Rescale keypoints
+	for(vector<KeyPoint>::iterator it = sourceKeyPoints.begin(); it != sourceKeyPoints.end(); it++) {
+		(*it).pt.x *= 640./sourceImage.cols*2;
+		(*it).pt.y *= 640./sourceImage.cols*2;
+	}
+	
 	NSLog(@"Training complete!");
 	sourceDescriptorsAreFresh = YES;
 	trained = YES;
@@ -199,7 +206,7 @@ using namespace std;
 			//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(1,0), modelviewMatrix.at<float>(1,1), modelviewMatrix.at<float>(1,2),  modelviewMatrix.at<float>(1,3));
 			//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(2,0), modelviewMatrix.at<float>(2,1), modelviewMatrix.at<float>(2,2),  modelviewMatrix.at<float>(2,3));
 			//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(3,0), modelviewMatrix.at<float>(3,1), modelviewMatrix.at<float>(3,2),  modelviewMatrix.at<float>(3,3));
-			return NO;
+			return YES;
 		}
 		else {
 			// Below is modified from planardetect.cpp OpenCV sample
@@ -234,7 +241,7 @@ using namespace std;
 					
 					//if(firstBestProb-secondBestProb > 3) {
 					//if(firstBestProb > -90 && firstBestProb-secondBestProb > 4) {
-					if(firstBestProb-secondBestProb > 4) {
+					if(firstBestProb-secondBestProb > 6) {
 						//NSLog(@"Good point ratio: %f", firstBestProb-secondBestProb);
 						//NSLog(@"Good point: %f", firstBestProb);
 						
@@ -264,33 +271,28 @@ using namespace std;
 			}
 			
 			//NSLog(@"Found %i points with average log prob %f", (int)fromPt.size(), sumLogProb/(float)fromPt.size());
-			if( fromPt.size() >= 30 ) {
+			if( fromPt.size() >= 25 ) {
 				vector<uchar> mask;
 			
 				//matrix = findHomography(Mat(fromPt), Mat(toPt), mask, RANSAC, 2);
 				Mat from = Mat(fromPt);
 				Mat to = Mat(toPt);
+				NSLog(@"Sending %i points to RANSAC", fromPt.size());
+				
 				HomographyEstimate estimate = [self findHomographyFrom:from To:to];
 				matrix = estimate.homography;
 				
 				
-				if(matrix.data ==0 || estimate.inliers < 10) {
-					//NSLog(@"Did not detect object.");
+				if(matrix.data == 0 || estimate.inliers < 10) {
+					// Did not detect object
 					return NO;
 				}
 				
-				//NSLog(@"Successfully found homography!");					
-				
 				modelviewMatrix = [self modelviewFromHomography:matrix];
 				
-				//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(0,0), modelviewMatrix.at<float>(0,1), modelviewMatrix.at<float>(0,2),  modelviewMatrix.at<float>(0,3));
-				//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(1,0), modelviewMatrix.at<float>(1,1), modelviewMatrix.at<float>(1,2),  modelviewMatrix.at<float>(1,3));
-				//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(2,0), modelviewMatrix.at<float>(2,1), modelviewMatrix.at<float>(2,2),  modelviewMatrix.at<float>(2,3));
-				//NSLog(@"%f\t%f\t%f\t%f", modelviewMatrix.at<float>(3,0), modelviewMatrix.at<float>(3,1), modelviewMatrix.at<float>(3,2),  modelviewMatrix.at<float>(3,3));
 				return YES;
 			}
 			else {
-				//NSLog(@"Source image not detected.");
 				return NO;
 			}
 		}			
@@ -358,19 +360,6 @@ using namespace std;
 
 	int count = MAX(fromPoints.cols, fromPoints.rows);
 	//NSLog(@"Using %i points", count);
-
-	/*
-	for(int i=0; i<fromPoints.rows; i++) {
-		//NSLog(@"%f, %f", fromPoints.at<float>(i,0), fromPoints.at<float>(i,1));
-		//fromPoints.at<float>(i,0) -= 320.;
-		//fromPoints.at<float>(i,1) -= 240.;
-	}
-	for(int i=0; i<toPoints.rows; i++) {
-		//NSLog(@"%f, %f", toPoints.at<float>(i,0), toPoints.at<float>(i,1));
-		//toPoints.at<float>(i,0) -= 320.;
-		//toPoints.at<float>(i,1) -= 240.;
-	}
-	*/
 	
 	// Convert cv::Mat to CvMat
 	CvMat _pt1 = Mat(toPoints), _pt2 = Mat(fromPoints);
@@ -390,9 +379,9 @@ using namespace std;
 	cvSet( tempMask, cvScalarAll(1.) );
 	
 	// Set RANSAC parameters
-	const double confidence = 0.995;			// 0.995
+	const double confidence = 0.999;			// 0.995
 	const int maxIters = 500;					// OpenCV default is hardcoded to 2000
-	const double ransacReprojThreshold = 3;		// 3
+	const double ransacReprojThreshold = 1;		// 3
 	bool result = false;
 	
 	Mat H(3, 3, CV_64F);    
@@ -423,6 +412,8 @@ using namespace std;
 
 template<typename T> int icvCompressPoints( T* ptr, const uchar* mask, int mstep, int count )
 {
+	/** Modifies the matrix pointed to by the first arg to only include indices included in the mask
+	*/
     int i, j;
     for( i = j = 0; i < count; i++ )
         if( mask[i*mstep] )

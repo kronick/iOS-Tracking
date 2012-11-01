@@ -22,7 +22,7 @@
 #include "PoseFilter.h"
 
 
-@interface trackingTestViewController : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate, ImageTaggerDelegate> {
+@interface trackingTestViewController : UIViewController <AVCaptureVideoDataOutputSampleBufferDelegate, ImageTaggerDelegate, UIGestureRecognizerDelegate> {
 	AVCaptureSession *captureSession;
 	AVCaptureVideoPreviewLayer *capturePreview;
 	AVCaptureVideoDataOutput *captureVideoOutput;
@@ -125,6 +125,10 @@
 - (void)updateSensorPose:(NSTimer*)theTimer;
 
 - (void) setMilestone;
+
+- (void)handlePinch:(UIPinchGestureRecognizer *)sender;
+- (void)handlePan:(UIPanGestureRecognizer *)sender;
+
 
 @end
 

@@ -33,7 +33,7 @@ PoseFilter::PoseFilter() {
 	gyrosMeasurementCount	= 9;		// 3x3 rotation matrix
 	gpsMeasurementCount		= 6;		// X,Y,Z, dX,dY,dZ
 	
-	cameraCovariance		= Mat::eye(cameraMeasurementCount,cameraMeasurementCount, CV_32F) * 0.001f;
+	cameraCovariance		= Mat::eye(cameraMeasurementCount,cameraMeasurementCount, CV_32F) * 0.005f;
 	//cameraCovariance.at<float>(0,0) = 0.01f;
 	//cameraCovariance.at<float>(1,1) = 0.01f;
 	//cameraCovariance.at<float>(2,2) = 0.01f;
@@ -185,5 +185,5 @@ void PoseFilter::setGyrosCovariance(float cov) {
 }
 
 void PoseFilter::setCameraCovariance(float cov) {
-	cameraCovariance	= Mat::eye(gyrosMeasurementCount,gyrosMeasurementCount, CV_32F) * cov;
+	cameraCovariance	= Mat::eye(cameraMeasurementCount,cameraMeasurementCount, CV_32F) * cov;
 }

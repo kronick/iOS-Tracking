@@ -32,6 +32,15 @@
 		9033CFEF134C1B2600CDE126 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9033CFEE134C1B2600CDE126 /* QuartzCore.framework */; };
 		9033CFF5134C1BB000CDE126 /* GLView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9033CFF4134C1BB000CDE126 /* GLView.mm */; };
 		9033D002134C346C00CDE126 /* OverlayRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9033D001134C346C00CDE126 /* OverlayRenderer.cpp */; };
+		904D168C139DCCC800BB4EEB /* RectifyGridView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 904D168B139DCCC800BB4EEB /* RectifyGridView.mm */; };
+		904D1752139E211900BB4EEB /* scale-guy-pipe-cyan.png in Resources */ = {isa = PBXBuildFile; fileRef = 904D1750139E211900BB4EEB /* scale-guy-pipe-cyan.png */; };
+		904D1753139E211900BB4EEB /* scale-guy-pipe.png in Resources */ = {isa = PBXBuildFile; fileRef = 904D1751139E211900BB4EEB /* scale-guy-pipe.png */; };
+		904D176D139E253000BB4EEB /* scale-giraffe.png in Resources */ = {isa = PBXBuildFile; fileRef = 904D176C139E253000BB4EEB /* scale-giraffe.png */; };
+		904D1775139E259200BB4EEB /* scale-bird.png in Resources */ = {isa = PBXBuildFile; fileRef = 904D1774139E259200BB4EEB /* scale-bird.png */; };
+		904D1777139E261200BB4EEB /* cyan-dot.png in Resources */ = {isa = PBXBuildFile; fileRef = 904D1776139E261200BB4EEB /* cyan-dot.png */; };
+		905C447313A4822E00206549 /* overlay-textures-02.png in Resources */ = {isa = PBXBuildFile; fileRef = 905C447113A4822E00206549 /* overlay-textures-02.png */; };
+		905C447413A4822E00206549 /* overlay-textures-03.png in Resources */ = {isa = PBXBuildFile; fileRef = 905C447213A4822E00206549 /* overlay-textures-03.png */; };
+		905C457813A4B11F00206549 /* fundam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 905C457713A4B11F00206549 /* fundam.cpp */; };
 		908CEC0013148C10001447D7 /* Homography.mm in Sources */ = {isa = PBXBuildFile; fileRef = 908CEBFF13148C10001447D7 /* Homography.mm */; };
 		908CEC821314CCA1001447D7 /* libopencv_calib3d.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 908CEC811314CCA1001447D7 /* libopencv_calib3d.a */; };
 		90AE40D912FBBF7600E59A29 /* libopencv_contrib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 90AE40CE12FBBF7600E59A29 /* libopencv_contrib.a */; };
@@ -91,6 +100,16 @@
 		9033D001134C346C00CDE126 /* OverlayRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OverlayRenderer.cpp; sourceTree = "<group>"; };
 		9033D078134C5AC800CDE126 /* OverlayRenderer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = OverlayRenderer.hpp; sourceTree = "<group>"; };
 		9033D378134FD6AD00CDE126 /* CvModelEstimator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CvModelEstimator.h; sourceTree = "<group>"; };
+		904D168A139DCCC800BB4EEB /* RectifyGridView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RectifyGridView.h; sourceTree = "<group>"; };
+		904D168B139DCCC800BB4EEB /* RectifyGridView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RectifyGridView.mm; sourceTree = "<group>"; };
+		904D1750139E211900BB4EEB /* scale-guy-pipe-cyan.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "scale-guy-pipe-cyan.png"; sourceTree = "<group>"; };
+		904D1751139E211900BB4EEB /* scale-guy-pipe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "scale-guy-pipe.png"; sourceTree = "<group>"; };
+		904D176C139E253000BB4EEB /* scale-giraffe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "scale-giraffe.png"; sourceTree = "<group>"; };
+		904D1774139E259200BB4EEB /* scale-bird.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "scale-bird.png"; sourceTree = "<group>"; };
+		904D1776139E261200BB4EEB /* cyan-dot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "cyan-dot.png"; sourceTree = "<group>"; };
+		905C447113A4822E00206549 /* overlay-textures-02.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "overlay-textures-02.png"; sourceTree = "<group>"; };
+		905C447213A4822E00206549 /* overlay-textures-03.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "overlay-textures-03.png"; sourceTree = "<group>"; };
+		905C457713A4B11F00206549 /* fundam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fundam.cpp; sourceTree = "<group>"; };
 		908CEBFE13148C10001447D7 /* Homography.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Homography.h; sourceTree = "<group>"; };
 		908CEBFF13148C10001447D7 /* Homography.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Homography.mm; sourceTree = "<group>"; };
 		908CEC811314CCA1001447D7 /* libopencv_calib3d.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopencv_calib3d.a; sourceTree = "<group>"; };
@@ -203,6 +222,9 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				905C447513A4823200206549 /* Overlays */,
+				904D176E139E253400BB4EEB /* Scale Figures */,
+				904D1776139E261200BB4EEB /* cyan-dot.png */,
 				90BBA04E136E74870010F302 /* green-dot.png */,
 				90BC5135136D4A1900D0B9E0 /* magentaDot.png */,
 				902D7C8B136BC70F002BB79B /* ImageTaggerViewController.xib */,
@@ -237,6 +259,8 @@
 			children = (
 				902D7C89136BC70F002BB79B /* ImageTaggerViewController.h */,
 				902D7C8A136BC70F002BB79B /* ImageTaggerViewController.mm */,
+				904D168A139DCCC800BB4EEB /* RectifyGridView.h */,
+				904D168B139DCCC800BB4EEB /* RectifyGridView.mm */,
 			);
 			name = UI;
 			path = Classes;
@@ -279,8 +303,8 @@
 			children = (
 				9033CFF3134C1BB000CDE126 /* GLView.h */,
 				9033CFF4134C1BB000CDE126 /* GLView.mm */,
-				9033D001134C346C00CDE126 /* OverlayRenderer.cpp */,
 				9033D078134C5AC800CDE126 /* OverlayRenderer.hpp */,
+				9033D001134C346C00CDE126 /* OverlayRenderer.cpp */,
 			);
 			name = Rendering;
 			sourceTree = "<group>";
@@ -301,8 +325,29 @@
 				908CEBFE13148C10001447D7 /* Homography.h */,
 				908CEBFF13148C10001447D7 /* Homography.mm */,
 				9033D378134FD6AD00CDE126 /* CvModelEstimator.h */,
+				905C457713A4B11F00206549 /* fundam.cpp */,
 			);
 			name = Vision;
+			sourceTree = "<group>";
+		};
+		904D176E139E253400BB4EEB /* Scale Figures */ = {
+			isa = PBXGroup;
+			children = (
+				904D1750139E211900BB4EEB /* scale-guy-pipe-cyan.png */,
+				904D1774139E259200BB4EEB /* scale-bird.png */,
+				904D176C139E253000BB4EEB /* scale-giraffe.png */,
+				904D1751139E211900BB4EEB /* scale-guy-pipe.png */,
+			);
+			name = "Scale Figures";
+			sourceTree = "<group>";
+		};
+		905C447513A4823200206549 /* Overlays */ = {
+			isa = PBXGroup;
+			children = (
+				905C447113A4822E00206549 /* overlay-textures-02.png */,
+				905C447213A4822E00206549 /* overlay-textures-03.png */,
+			);
+			name = Overlays;
 			sourceTree = "<group>";
 		};
 		90AE42D91300785000E59A29 /* Tracking */ = {
@@ -381,6 +426,13 @@
 				902D7CE1136BDD77002BB79B /* trackingTestViewController~ipad.xib in Resources */,
 				90BC5136136D4A1900D0B9E0 /* magentaDot.png in Resources */,
 				90BBA04F136E74870010F302 /* green-dot.png in Resources */,
+				904D1752139E211900BB4EEB /* scale-guy-pipe-cyan.png in Resources */,
+				904D1753139E211900BB4EEB /* scale-guy-pipe.png in Resources */,
+				904D176D139E253000BB4EEB /* scale-giraffe.png in Resources */,
+				904D1775139E259200BB4EEB /* scale-bird.png in Resources */,
+				904D1777139E261200BB4EEB /* cyan-dot.png in Resources */,
+				905C447313A4822E00206549 /* overlay-textures-02.png in Resources */,
+				905C447413A4822E00206549 /* overlay-textures-03.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -404,6 +456,8 @@
 				9033D002134C346C00CDE126 /* OverlayRenderer.cpp in Sources */,
 				90C36A57135CD12900DB5EB6 /* PoseFilter.cpp in Sources */,
 				902D7C8C136BC70F002BB79B /* ImageTaggerViewController.mm in Sources */,
+				904D168C139DCCC800BB4EEB /* RectifyGridView.mm in Sources */,
+				905C457813A4B11F00206549 /* fundam.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,9 +532,10 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Samuel Kronick (2PS8HHFURV)";
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_THUMB_SUPPORT = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "/Users/kronick/Documents/OpenCV/niw-iphone_opencv_test-4ab0572/build_device/include";
@@ -495,6 +550,7 @@
 					"-lm",
 				);
 				PREBINDING = NO;
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "4BFD0351-341D-4B98-9397-D283910A40E4";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -502,9 +558,12 @@
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Samuel Kronick (2PS8HHFURV)";
+				GCC_AUTO_VECTORIZATION = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_THUMB_SUPPORT = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = $SRCROOT/OpenCV22/include;
@@ -519,6 +578,7 @@
 					"-lm",
 				);
 				PREBINDING = NO;
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "4BFD0351-341D-4B98-9397-D283910A40E4";
 				SDKROOT = iphoneos;
 			};
 			name = Release;

@@ -29,4 +29,8 @@
 - (void) drawView: (CADisplayLink*) displayLink;
 - (void) didRotate: (NSNotification*) notification;
 
+- (void) loadTextureNamed: (NSString *)filename intoSlot: (int)slotNumber;
+
+- (void) setScale: (CGFloat) scale;
+- (void) translate: (CGPoint) dP;
 @end
